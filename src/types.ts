@@ -6,8 +6,8 @@ export interface Bullet {
     content: string;
     type: BulletType;
     state: BulletState;
-    date: string; // ISO date string (YYYY-MM-DD)
-    collectionId?: string; // If 'daily', this is undefined or null, otherwise points to a collection
+    date?: string | null; // ISO date string (YYYY-MM-DD), optional for undated tasks
+    collectionId?: string | null; // If 'daily', this is undefined or null, otherwise points to a collection
     order: number;
     createdAt: number;
     updatedAt: number;
@@ -21,6 +21,7 @@ export interface Collection {
     title: string;
     type: 'project' | 'list' | 'future_log';
     createdAt: number;
+    archived?: boolean;
 }
 
 export type ViewMode = 'daily' | 'week' | 'future' | 'collection' | 'search' | 'backlog' | 'help';

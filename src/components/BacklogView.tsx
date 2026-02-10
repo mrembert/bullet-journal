@@ -15,13 +15,24 @@ export function BacklogView() {
             // Must be open
             if (b.state !== 'open') return false;
             // Must be from a daily log (no collectionId)
-            if (b.collectionId) return false;
+            // if (b.collectionId) return false; // Show project tasks too if they are undated or overdue
 
-            // Must be before today
+            // Include if Undated OR Before Today
+            if (!b.date) return true;
+
             const bulletDate = parseISO(b.date);
             return isBefore(bulletDate, today);
         })
-        .sort((a, b) => b.date.localeCompare(a.date)); // Sort by date descending (newest first)
+        .sort((a, b) => {
+            // Undated first? Or last? Let's put Undated first.
+            if (!a.date && b.date) return -1;
+            if (a.date && !b.date) return 1;
+            if (!a.date && !b.date) return (a.order || 0) - (b.order || 0);
+            return b.date!.localeCompare(a.date!); // Descending date
+        });
+
+    const undatedTasks = openTasks.filter(b => !b.date);
+    const datedTasks = openTasks.filter(b => b.date);
 
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -30,7 +41,7 @@ export function BacklogView() {
                 <div>
                     <h1 style={{ fontSize: '2rem', fontWeight: 700, lineHeight: 1.2 }}>Open Tasks</h1>
                     <p style={{ color: 'hsl(var(--color-text-secondary))' }}>
-                        Tasks from past days that need your attention.
+                        Undated tasks and items from past days that need attention.
                     </p>
                 </div>
             </header>
@@ -47,13 +58,39 @@ export function BacklogView() {
                         <Archive size={32} />
                     </div>
                     <p style={{ fontSize: '1.2rem' }}>You're all caught up!</p>
-                    <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>No open tasks from the past.</p>
+                    <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>No open tasks found.</p>
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    {/* Group by date? or just flat list? Grouping is nicer. */}
-                    {Array.from(new Set(openTasks.map(b => b.date))).map(date => {
-                        const tasksForDate = openTasks.filter(b => b.date === date);
+
+                    {/* Undated Section */}
+                    {undatedTasks.length > 0 && (
+                        <div>
+                            <h3 style={{
+                                fontSize: '0.9rem',
+                                fontWeight: 600,
+                                color: 'hsl(var(--color-text-secondary))',
+                                borderBottom: '1px solid hsl(var(--color-text-secondary) / 0.2)',
+                                paddingBottom: '0.5rem',
+                                marginBottom: '1rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}>
+                                <AlertCircle size={14} />
+                                Inbox / Undated
+                            </h3>
+                            <div>
+                                {undatedTasks.map(bullet => (
+                                    <BulletItem key={bullet.id} bullet={bullet} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Dated Sections */}
+                    {Array.from(new Set(datedTasks.map(b => b.date!))).map(date => {
+                        const tasksForDate = datedTasks.filter(b => b.date === date);
                         return (
                             <div key={date}>
                                 <h3 style={{
@@ -80,6 +117,7 @@ export function BacklogView() {
                     })}
                 </div>
             )}
+
         </div>
     );
 }

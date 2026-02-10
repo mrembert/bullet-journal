@@ -1,1 +1,18 @@
-/* Cleaned up */
+/* Project Item Actions */
+.project-item {
+    position: relative;
+}
+
+.project-actions {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.project-item:hover .project-actions {
+    opacity: 1;
+}
+
+/* Ensure actions are visible on focus for accessibility */
+.project-item:focus-within .project-actions {
+    opacity: 1;
+}

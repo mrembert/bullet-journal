@@ -9,11 +9,13 @@ import { performActionInFirestore, subscribeToUserData } from './lib/database';
 // NOTE: We now require IDs for creation actions because the Dispatch wrapper generates them
 // to ensure consistency between Local Optimistic UI and Firestore Write.
 type Action =
-    | { type: 'ADD_BULLET'; payload: { id: string; content: string; type: BulletType; date: string; collectionId?: string } }
-    | { type: 'UPDATE_BULLET'; payload: { id: string; content?: string; state?: BulletState; longFormContent?: string } }
+    | { type: 'ADD_BULLET'; payload: { id: string; content: string; type: BulletType; date?: string; collectionId?: string } }
+    | { type: 'UPDATE_BULLET'; payload: { id: string; content?: string; state?: BulletState; longFormContent?: string; date?: string | null; collectionId?: string | null } }
     | { type: 'DELETE_BULLET'; payload: { id: string } }
     | { type: 'SET_VIEW'; payload: { mode: ViewMode; date?: string; collectionId?: string } }
     | { type: 'ADD_COLLECTION'; payload: { id: string; title: string; type: Collection['type'] } }
+    | { type: 'UPDATE_COLLECTION'; payload: { id: string; title?: string; archived?: boolean } }
+    | { type: 'DELETE_COLLECTION'; payload: { id: string } }
     | { type: 'MIGRATE_BULLET'; payload: { id: string; targetDate: string; newId?: string } }
     | { type: 'REORDER_BULLETS'; payload: { items: { id: string, order: number }[] } }
     | { type: 'TOGGLE_PREFERENCE'; payload: { key: keyof AppState['preferences'] } }
@@ -158,6 +160,28 @@ function reducer(state: AppState, action: Action): AppState {
                         createdAt: now,
                     },
                 },
+            };
+        }
+        case 'UPDATE_COLLECTION': {
+            const collection = state.collections[action.payload.id];
+            if (!collection) return state;
+
+            return {
+                ...state,
+                collections: {
+                    ...state.collections,
+                    [action.payload.id]: {
+                        ...collection,
+                        ...action.payload,
+                    }
+                }
+            };
+        }
+        case 'DELETE_COLLECTION': {
+            const { [action.payload.id]: deleted, ...remainingCollections } = state.collections;
+            return {
+                ...state,
+                collections: remainingCollections
             };
         }
         case 'TOGGLE_PREFERENCE': {

@@ -11,10 +11,12 @@ import type { AppState, Bullet, Collection, BulletType, BulletState } from '../t
 
 // Action Type Definition (Partial, for what we handle in DB)
 type Action =
-    | { type: 'ADD_BULLET'; payload: { id: string; content: string; type: BulletType; date: string; collectionId?: string } }
-    | { type: 'UPDATE_BULLET'; payload: { id: string; content?: string; state?: BulletState; longFormContent?: string } }
+    | { type: 'ADD_BULLET'; payload: { id: string; content: string; type: BulletType; date?: string; collectionId?: string } }
+    | { type: 'UPDATE_BULLET'; payload: { id: string; content?: string; state?: BulletState; longFormContent?: string; date?: string | null; collectionId?: string | null } }
     | { type: 'DELETE_BULLET'; payload: { id: string } }
     | { type: 'ADD_COLLECTION'; payload: { id: string; title: string; type: Collection['type'] } }
+    | { type: 'UPDATE_COLLECTION'; payload: { id: string; title?: string; archived?: boolean } }
+    | { type: 'DELETE_COLLECTION'; payload: { id: string } }
     | { type: 'MIGRATE_BULLET'; payload: { id: string; targetDate: string; newId?: string } } // newId optional as logic depends on collection
     | { type: 'REORDER_BULLETS'; payload: { items: { id: string, order: number }[] } };
 
@@ -131,6 +133,18 @@ export async function performActionInFirestore(uid: string, action: Action, curr
                     id,
                     createdAt: Date.now()
                 });
+                break;
+            }
+            case 'UPDATE_COLLECTION': {
+                const ref = doc(usersRef, 'collections', action.payload.id);
+                const updates = Object.fromEntries(
+                    Object.entries(action.payload).filter(([_, v]) => v !== undefined)
+                );
+                await updateDoc(ref, updates);
+                break;
+            }
+            case 'DELETE_COLLECTION': {
+                await deleteDoc(doc(usersRef, 'collections', action.payload.id));
                 break;
             }
             case 'REORDER_BULLETS': {

@@ -16,6 +16,7 @@ export function FutureLog() {
         return Object.values(state.bullets).filter(b => {
             // if (b.collectionId) return false; // Don't show collection items - CHANGED: Show them if they have a date!
             if (b.state === 'migrated' || b.state === 'cancelled') return false; // Hide migrated/cancelled
+            if (!b.date) return false; // Undated items don't belong in Future Log
             const bDate = parseISO(b.date);
             return isSameMonth(bDate, monthDate);
         });

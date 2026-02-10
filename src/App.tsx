@@ -1,4 +1,4 @@
-import { BookOpen, Calendar, Star, List, ChevronLeft, ChevronRight, Plus, Columns, Search, Download, Upload, Moon, Sun, Archive, HelpCircle, MessageSquare } from 'lucide-react';
+import { BookOpen, Calendar, Star, List, ChevronLeft, ChevronRight, Plus, Columns, Search, Download, Upload, Moon, Sun, Archive, HelpCircle, MessageSquare, Trash2, ArchiveRestore, Eye, EyeOff } from 'lucide-react';
 import { DailyLog } from './components/DailyLog';
 import { FutureLog } from './components/FutureLog';
 import { CollectionView } from './components/CollectionView';
@@ -13,6 +13,7 @@ import { useAuth } from './contexts/AuthContext';
 import { useNoteEditor } from './contexts/NoteEditorContext';
 import { Login, Unauthorized } from './components/Login';
 import { NoteEditor } from './components/NoteEditor';
+import { useConfirmation } from './contexts/ConfirmationContext';
 import './App.css';
 
 function App() {
@@ -20,8 +21,10 @@ function App() {
   const { state, dispatch } = useStore();
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
   const [newCollectionTitle, setNewCollectionTitle] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { openNoteId, closeNote } = useNoteEditor();
+  const { requestConfirmation } = useConfirmation();
 
   // Theme State
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -217,16 +220,81 @@ function App() {
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              {collections.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => setView('collection', undefined, c.id)}
-                  className={`btn ${state.view.collectionId === c.id ? 'btn-primary' : 'btn-ghost'}`}
-                  style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.9rem' }}
-                >
-                  <List size={16} /> {c.title}
-                </button>
-              ))}
+              {collections
+                .filter(c => showArchived ? c.archived : !c.archived)
+                .map(c => (
+                  <div key={c.id} style={{ display: 'flex', alignItems: 'center' }} className="project-item">
+                    <button
+                      onClick={() => setView('collection', undefined, c.id)}
+                      className={`btn ${state.view.collectionId === c.id ? 'btn-primary' : 'btn-ghost'}`}
+                      style={{ justifyContent: 'flex-start', flex: 1, fontSize: '0.9rem' }}
+                    >
+                      <List size={16} /> {c.title}
+                    </button>
+                    <div className="project-actions" style={{ display: 'flex' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (c.archived) {
+                            dispatch({ type: 'UPDATE_COLLECTION', payload: { id: c.id, archived: false } });
+                          } else {
+                            requestConfirmation({
+                              title: 'Archive Project',
+                              message: `Archive "${c.title}"?`,
+                              confirmLabel: 'Archive',
+                              onConfirm: () => {
+                                dispatch({ type: 'UPDATE_COLLECTION', payload: { id: c.id, archived: true } });
+                                if (state.view.collectionId === c.id) {
+                                  setView('daily', format(new Date(), 'yyyy-MM-dd'));
+                                }
+                              }
+                            });
+                          }
+                        }}
+                        className="btn btn-ghost"
+                        style={{ padding: '0.25rem', color: 'hsl(var(--color-text-secondary))' }}
+                        title={c.archived ? "Unarchive" : "Archive"}
+                      >
+                        {c.archived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+                      </button>
+                      {!c.archived && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            requestConfirmation({
+                              title: 'Delete Project',
+                              message: `Delete "${c.title}" permanently? Tasks will be unassigned.`,
+                              isDanger: true,
+                              confirmLabel: 'Delete',
+                              onConfirm: () => {
+                                dispatch({ type: 'DELETE_COLLECTION', payload: { id: c.id } });
+                                if (state.view.collectionId === c.id) {
+                                  setView('daily', format(new Date(), 'yyyy-MM-dd'));
+                                }
+                              }
+                            });
+                          }}
+                          className="btn btn-ghost"
+                          style={{ padding: '0.25rem', color: 'hsl(var(--color-text-secondary))' }}
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            <div style={{ marginTop: '1rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)', paddingTop: '0.5rem' }}>
+              <button
+                onClick={() => setShowArchived(!showArchived)}
+                className="btn btn-ghost"
+                style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.8rem', color: 'hsl(var(--color-text-secondary))' }}
+              >
+                {showArchived ? <EyeOff size={14} /> : <Eye size={14} />}
+                {showArchived ? " Go Back to Active Projects" : " Show Archived Projects"}
+              </button>
             </div>
           </div>
 

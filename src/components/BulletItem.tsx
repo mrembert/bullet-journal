@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Circle, X, Minus, ChevronRight, ArrowRight, Trash, FileText, FolderInput } from 'lucide-react';
+import { Circle, X, Minus, ChevronRight, Trash, FileText, FolderInput, Calendar } from 'lucide-react';
 import type { Bullet } from '../types';
 import { useStore } from '../store';
-import { MigrationPicker } from './MigrationPicker';
+import { DatePicker } from './DatePicker';
 import { ProjectPicker } from './ProjectPicker';
 import { useNoteEditor } from '../contexts/NoteEditorContext';
+import { useConfirmation } from '../contexts/ConfirmationContext';
+import { format, parseISO } from 'date-fns';
 
 interface BulletItemProps {
     bullet: Bullet;
@@ -12,10 +14,11 @@ interface BulletItemProps {
 
 export function BulletItem({ bullet }: BulletItemProps) {
     const { state, dispatch } = useStore();
-    const [showMigration, setShowMigration] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [showProjectPicker, setShowProjectPicker] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const { openNote } = useNoteEditor();
+    const { requestConfirmation } = useConfirmation();
 
     const collection = bullet.collectionId ? state.collections[bullet.collectionId] : null;
     const showCollectionTag = collection && state.view.collectionId !== bullet.collectionId;
@@ -28,9 +31,9 @@ export function BulletItem({ bullet }: BulletItemProps) {
         }
     };
 
-    const handleMigrate = (targetDate: string) => {
-        dispatch({ type: 'MIGRATE_BULLET', payload: { id: bullet.id, targetDate } });
-        setShowMigration(false);
+    const handleDateSelect = (date: string | null) => {
+        dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, date: date } });
+        setShowDatePicker(false);
     };
 
     const getIcon = () => {
@@ -67,7 +70,7 @@ export function BulletItem({ bullet }: BulletItemProps) {
                     position: 'relative'
                 }}
                 onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => { setIsHovered(false); if (!showMigration) setShowMigration(false); }}
+                onMouseLeave={() => { setIsHovered(false); if (!showDatePicker) setShowDatePicker(false); }}
             >
                 <button
                     onClick={toggleState}
@@ -100,6 +103,23 @@ export function BulletItem({ bullet }: BulletItemProps) {
                             whiteSpace: 'nowrap'
                         }}>
                             {collection?.title}
+                        </span>
+                    )}
+                    {bullet.date && state.view.mode !== 'daily' && ( // Show date tag if not in daily view (or always show?)
+                        <span style={{
+                            fontSize: '0.7rem',
+                            padding: '0.1rem 0.3rem',
+                            borderRadius: '4px',
+                            backgroundColor: 'hsl(var(--color-bg-secondary))',
+                            color: 'hsl(var(--color-text-secondary))',
+                            border: '1px solid hsl(var(--color-text-secondary) / 0.2)',
+                            whiteSpace: 'nowrap',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.2rem'
+                        }}>
+                            <Calendar size={10} />
+                            {format(parseISO(bullet.date), 'MMM d')}
                         </span>
                     )}
                     {bullet.parentNoteId && (
@@ -156,9 +176,11 @@ export function BulletItem({ bullet }: BulletItemProps) {
                     </button>
                 )}
 
-                {/* Migration Action - Only for open tasks */}
-                {bullet.type === 'task' && !isCompleted && !isMigrated && (isHovered || showMigration || showProjectPicker) && (
+                {/* Always available actions on hover */}
+                {(isHovered || showProjectPicker || showDatePicker) && (
                     <div style={{ position: 'relative', display: 'flex', gap: '0.25rem' }}>
+
+                        {/* Project Picker */}
                         <button
                             onClick={() => setShowProjectPicker(!showProjectPicker)}
                             className="btn btn-ghost"
@@ -178,25 +200,32 @@ export function BulletItem({ bullet }: BulletItemProps) {
                             />
                         )}
 
+                        {/* Date Picker */}
                         <button
-                            onClick={() => setShowMigration(!showMigration)}
+                            onClick={() => setShowDatePicker(!showDatePicker)}
                             className="btn btn-ghost"
                             style={{ padding: '0.25rem', height: 'auto', color: 'hsl(var(--color-text-secondary))' }}
-                            title="Migrate"
+                            title="Assign Date"
                         >
-                            <ArrowRight size={16} />
+                            <Calendar size={16} />
                         </button>
-                        {showMigration && (
-                            <MigrationPicker
-                                onSelectDate={handleMigrate}
-                                onCancel={() => setShowMigration(false)}
+                        {showDatePicker && (
+                            <DatePicker
+                                currentDate={bullet.date || undefined}
+                                onSelectDate={handleDateSelect}
+                                onCancel={() => setShowDatePicker(false)}
                             />
                         )}
+
                         <button
                             onClick={() => {
-                                if (window.confirm('Delete this item?')) {
-                                    dispatch({ type: 'DELETE_BULLET', payload: { id: bullet.id } });
-                                }
+                                requestConfirmation({
+                                    title: 'Delete Item',
+                                    message: 'Delete this item?',
+                                    isDanger: true,
+                                    confirmLabel: 'Delete',
+                                    onConfirm: () => dispatch({ type: 'DELETE_BULLET', payload: { id: bullet.id } })
+                                });
                             }}
                             className="btn btn-ghost"
                             style={{ padding: '0.25rem', height: 'auto', color: 'hsl(var(--color-danger))' }}
@@ -205,21 +234,6 @@ export function BulletItem({ bullet }: BulletItemProps) {
                             <Trash size={16} />
                         </button>
                     </div>
-                )}
-                {/* Delete Action for non-migratable items (notes, events, completed) */}
-                {((bullet.type !== 'task' || isCompleted || isMigrated) && isHovered) && (
-                    <button
-                        onClick={() => {
-                            if (window.confirm('Delete this item?')) {
-                                dispatch({ type: 'DELETE_BULLET', payload: { id: bullet.id } });
-                            }
-                        }}
-                        className="btn btn-ghost"
-                        style={{ padding: '0.25rem', height: 'auto', color: 'hsl(var(--color-danger))' }}
-                        title="Delete"
-                    >
-                        <Trash size={16} />
-                    </button>
                 )}
             </div>
         </>

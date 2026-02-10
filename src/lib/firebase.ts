@@ -20,4 +20,16 @@ console.log("Initializing Firebase with config:", {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Development Environment Setup
+if (import.meta.env.VITE_USE_EMULATOR === 'true') {
+    const { connectAuthEmulator } = await import("firebase/auth");
+    const { connectFirestoreEmulator } = await import("firebase/firestore");
+
+    console.log("🔥 Connecting to Firebase Emulators...");
+    connectAuthEmulator(auth, "http://127.0.0.1:9099");
+    connectFirestoreEmulator(db, '127.0.0.1', 8080);
+    console.log("✅ Connected to Emulators");
+}
+
 export default app;

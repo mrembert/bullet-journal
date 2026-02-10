@@ -6,6 +6,7 @@ import { StoreProvider } from './store.tsx'
 import { AuthProvider } from './contexts/AuthContext.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { NoteEditorProvider } from './contexts/NoteEditorContext.tsx'
+import { ConfirmationProvider } from './contexts/ConfirmationContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <StoreProvider>
           <NoteEditorProvider>
-            <App />
+            <ConfirmationProvider>
+              <App />
+            </ConfirmationProvider>
           </NoteEditorProvider>
         </StoreProvider>
       </AuthProvider>
