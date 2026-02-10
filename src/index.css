@@ -1,0 +1,156 @@
+:root {
+  /* HSL Color Palette - Premium "Paper" Feel */
+  --color-bg-primary: 36 33% 98%;
+  /* #fcf8f3 - Slightly brighter warm paper */
+  --color-bg-secondary: 36 20% 92%;
+  /* #efeadd - darker paper for cards/sidebar */
+
+  --color-text-primary: 220 15% 18%;
+  /* #272b35 - Deep charcoal, softer than black */
+  --color-text-secondary: 220 8% 45%;
+  /* #6a6f7a - Muted gray-blue */
+
+  --color-accent: 212 65% 48%;
+  /* #2b70c9 - Refined professional blue */
+
+  --color-success: 145 35% 45%;
+  /* Natural green */
+  --color-warning: 35 85% 55%;
+  /* Amber */
+  --color-danger: 350 60% 55%;
+  /* Soft red */
+
+  --shadow-sm: 0 1px 2px -1px rgba(0, 0, 0, 0.08);
+  /* Softer shadow */
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  /* More rounded corners */
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Merriweather', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root.dark {
+  --color-bg-primary: 222 18% 11%;
+  /* #171a21 - Deep midnight */
+  --color-bg-secondary: 222 18% 15%;
+  /* #1f232c - Slightly lighter midnight */
+
+  --color-text-primary: 220 20% 92%;
+  /* Bright but soft text */
+  --color-text-secondary: 220 10% 60%;
+
+  --color-accent: 212 80% 65%;
+  /* Brighter blue for dark mode */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: hsl(var(--color-bg-primary));
+  color: hsl(var(--color-text-primary));
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  /* font-family: var(--font-serif); Reverted to sans-serif */
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--color-text-secondary) / 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--color-text-secondary) / 0.4);
+}
+
+/* Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: hsl(var(--color-bg-secondary));
+  color: hsl(var(--color-text-primary));
+}
+
+.btn:hover {
+  filter: brightness(0.95);
+  /* Dark mode safe contrast */
+}
+
+.btn-primary {
+  background: hsl(var(--color-accent));
+  color: white;
+}
+
+.btn-ghost {
+  background: transparent;
+}
+
+.btn-ghost:hover {
+  background: hsl(var(--color-text-secondary) / 0.1);
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  padding-left: 2.5rem;
+  /* Space for bullet char */
+  border: none;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: hsl(var(--color-text-primary));
+  outline: none;
+}
+
+.input::placeholder {
+  color: hsl(var(--color-text-secondary) / 0.5);
+}
