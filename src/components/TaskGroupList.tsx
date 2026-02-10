@@ -16,6 +16,8 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
+import { useEffect, useMemo } from 'react';
 
 interface TaskGroupListProps {
     bullets: Bullet[];
@@ -25,15 +27,22 @@ interface TaskGroupListProps {
 
 export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGroupListProps) {
     const { state } = useStore();
+    const { focusedId, setVisibleIds } = useKeyboardFocus();
     const { groupByProject, showCompleted } = state.preferences;
 
     // 1. Filter based on preferences
-    const filteredBullets = bullets.filter(b => {
+    const filteredBullets = useMemo(() => bullets.filter(b => {
         if (!showCompleted && (b.state === 'completed' || b.state === 'migrated' || b.state === 'cancelled')) {
             return false;
         }
         return true;
-    });
+    }), [bullets, showCompleted]);
+
+    // Register visible IDs for keyboard navigation
+    useEffect(() => {
+        setVisibleIds(filteredBullets.map(b => b.id));
+        return () => setVisibleIds([]);
+    }, [filteredBullets, setVisibleIds]);
 
     // 2. Group if enabled
     if (groupByProject) {
@@ -72,7 +81,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                         </h3>
                         {/* DnD within unassigned? Maybe too complex for now, just render items */}
                         {unassigned.map(b => (
-                            <BulletItem key={b.id} bullet={b} />
+                            <BulletItem key={b.id} bullet={b} isFocused={b.id === focusedId} />
                         ))}
                     </div>
                 )}
@@ -90,7 +99,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                             {state.collections[pid].title}
                         </h3>
                         {grouped[pid].map(b => (
-                            <BulletItem key={b.id} bullet={b} />
+                            <BulletItem key={b.id} bullet={b} isFocused={b.id === focusedId} />
                         ))}
                     </div>
                 ))}
@@ -136,7 +145,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                             </div>
                         ) : (
                             filteredBullets.map(b => (
-                                <SortableBulletItem key={b.id} bullet={b} />
+                                <SortableBulletItem key={b.id} bullet={b} isFocused={b.id === focusedId} />
                             ))
                         )}
                     </div>
@@ -154,7 +163,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                 </div>
             ) : (
                 filteredBullets.map(b => (
-                    <BulletItem key={b.id} bullet={b} />
+                    <BulletItem key={b.id} bullet={b} isFocused={b.id === focusedId} />
                 ))
             )}
         </div>

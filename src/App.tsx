@@ -14,6 +14,11 @@ import { useNoteEditor } from './contexts/NoteEditorContext';
 import { Login, Unauthorized } from './components/Login';
 import { NoteEditor } from './components/NoteEditor';
 import { useConfirmation } from './contexts/ConfirmationContext';
+import { KeyboardFocusProvider } from './contexts/KeyboardFocusContext';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { MigrationPicker } from './components/MigrationPicker';
+import { ShortcutsOverlay } from './components/ShortcutsOverlay';
+import { Keyboard } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -23,11 +28,16 @@ function App() {
   const [newCollectionTitle, setNewCollectionTitle] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [migratingBulletId, setMigratingBulletId] = useState<string | null>(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const closeSidebar = () => setSidebarOpen(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { openNoteId, closeNote } = useNoteEditor();
   const { requestConfirmation } = useConfirmation();
+
+  // Keyboard Shortcuts
+  useKeyboardShortcuts(setMigratingBulletId);
 
   // Theme State
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -50,6 +60,24 @@ function App() {
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
+
+  useEffect(() => {
+    const handleGlobalShortcuts = (e: KeyboardEvent) => {
+      // Don't trigger if in input
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      const isInput = activeTag === 'input' || activeTag === 'textarea' || (document.activeElement as HTMLElement)?.isContentEditable;
+
+      if (e.key === '?' && !isInput) {
+        setShowShortcuts(prev => !prev);
+      }
+      if (e.key === 'Escape' && showShortcuts) {
+        setShowShortcuts(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalShortcuts);
+    return () => window.removeEventListener('keydown', handleGlobalShortcuts);
+  }, [showShortcuts]);
 
   if (loading) {
     return (
@@ -299,6 +327,14 @@ function App() {
 
           <div style={{ marginTop: '2rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)', paddingTop: '1rem' }}>
             <button
+              onClick={() => setShowShortcuts(true)}
+              className="btn btn-ghost"
+              style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.9rem' }}
+            >
+              <Keyboard size={18} /> Shortcuts
+              <span style={{ marginLeft: 'auto', fontSize: '0.7rem', opacity: 0.5, backgroundColor: 'hsl(var(--color-bg-primary))', padding: '0.1rem 0.3rem', borderRadius: '3px' }}>?</span>
+            </button>
+            <button
               onClick={() => setView('help')}
               className={`btn ${state.view.mode === 'help' ? 'btn-primary' : 'btn-ghost'}`}
               style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.9rem' }}
@@ -383,8 +419,43 @@ function App() {
           onClose={closeNote}
         />
       )}
+
+      {migratingBulletId && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1000,
+          backgroundColor: 'rgba(0,0,0,0.2)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }} onClick={() => setMigratingBulletId(null)}>
+          <div style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
+            <MigrationPicker
+              onSelectDate={(date) => {
+                dispatch({ type: 'MIGRATE_BULLET', payload: { id: migratingBulletId, targetDate: date } });
+                setMigratingBulletId(null);
+              }}
+              onCancel={() => setMigratingBulletId(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      {showShortcuts && (
+        <ShortcutsOverlay onClose={() => setShowShortcuts(false)} />
+      )}
     </div>
   );
 }
 
-export default App;
+export default function AppWrapper() {
+  return (
+    <KeyboardFocusProvider>
+      <App />
+    </KeyboardFocusProvider>
+  );
+}

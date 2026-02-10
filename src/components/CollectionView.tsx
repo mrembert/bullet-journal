@@ -18,10 +18,13 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
+import { useEffect } from 'react';
 
 export function CollectionView() {
     const { state, dispatch } = useStore();
     const { collectionId } = state.view;
+    const { focusedId, setVisibleIds } = useKeyboardFocus();
     const [showCompleted, setShowCompleted] = useState(false);
 
     const collection = collectionId ? state.collections[collectionId] : null;
@@ -33,6 +36,12 @@ export function CollectionView() {
         .filter((b) => b.collectionId === collectionId)
         .filter((b) => showCompleted || b.state !== 'completed')
         .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    // Register visible IDs for keyboard navigation
+    useEffect(() => {
+        setVisibleIds(bullets.map(b => b.id));
+        return () => setVisibleIds([]);
+    }, [bullets, setVisibleIds]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -103,7 +112,7 @@ export function CollectionView() {
                         strategy={verticalListSortingStrategy}
                     >
                         {bullets.map((bullet) => (
-                            <SortableBulletItem key={bullet.id} bullet={bullet} />
+                            <SortableBulletItem key={bullet.id} bullet={bullet} isFocused={bullet.id === focusedId} />
                         ))}
                     </SortableContext>
                 </DndContext>

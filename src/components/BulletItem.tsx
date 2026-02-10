@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { Circle, X, Minus, ChevronRight, Trash, FileText, FolderInput, Calendar, MoreVertical } from 'lucide-react';
 import type { Bullet } from '../types';
 import { useStore } from '../store';
@@ -10,9 +10,10 @@ import { format, parseISO } from 'date-fns';
 
 interface BulletItemProps {
     bullet: Bullet;
+    isFocused?: boolean;
 }
 
-export function BulletItem({ bullet }: BulletItemProps) {
+export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet, isFocused }, ref) => {
     const { state, dispatch } = useStore();
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showProjectPicker, setShowProjectPicker] = useState(false);
@@ -55,19 +56,38 @@ export function BulletItem({ bullet }: BulletItemProps) {
     const isMigrated = bullet.state === 'migrated';
     const hasNote = !!bullet.longFormContent;
 
+    const itemRef = useRef<HTMLDivElement>(null);
+
+    // Scroll into view if focused via keyboard
+    useEffect(() => {
+        if (isFocused && itemRef.current) {
+            itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }, [isFocused]);
+
     return (
-        <>
+        <div ref={(node) => {
+            // Combine refs
+            (itemRef as any).current = node;
+            if (typeof ref === 'function') ref(node);
+            else if (ref) ref.current = node;
+        }}>
             <div
-                className={`task-item ${isCompleted ? 'completed' : ''}`}
+                className={`task-item ${isCompleted ? 'completed' : ''} ${isFocused ? 'keyboard-focused' : ''}`}
                 style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
-                    padding: '0.5rem 0',
+                    padding: '0.5rem 0.75rem', // Added some horizontal padding for focus ring
+                    margin: '0 -0.75rem', // Offset padding to keep alignment
+                    borderRadius: 'var(--radius-sm)',
                     opacity: isMigrated ? 0.5 : 1,
                     textDecoration: isCompleted ? 'line-through' : 'none',
                     color: isCompleted || isMigrated ? 'hsl(var(--color-text-secondary))' : 'inherit',
-                    position: 'relative'
+                    position: 'relative',
+                    transition: 'background-color 0.15s ease, border-color 0.15s ease',
+                    borderLeft: isFocused ? '3px solid hsl(var(--color-accent))' : '3px solid transparent',
+                    backgroundColor: isFocused ? 'hsl(var(--color-accent) / 0.05)' : 'transparent',
                 }}
             >
                 <button
@@ -258,6 +278,6 @@ export function BulletItem({ bullet }: BulletItemProps) {
                     )}
                 </div>
             </div>
-        </>
+        </div>
     );
-}
+});

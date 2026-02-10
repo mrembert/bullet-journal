@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useStore } from '../store';
 import { BulletItem } from './BulletItem';
+import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
+import { useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { parseISO, format } from 'date-fns';
 
 export function SearchView() {
     const { state } = useStore();
     const [query, setQuery] = useState('');
+    const { focusedId, setVisibleIds } = useKeyboardFocus();
 
     const results = useMemo(() => {
         if (!query.trim()) return [];
@@ -16,8 +19,14 @@ export function SearchView() {
                 b.content.toLowerCase().includes(lowerQuery) ||
                 (b.longFormContent && b.longFormContent.toLowerCase().includes(lowerQuery))
             )
-            .sort((a, b) => b.createdAt - a.createdAt); // Newest first
+            .sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt)); // Sort by updated or created, newest first
     }, [state.bullets, query]);
+
+    // Register visible IDs for keyboard navigation
+    useEffect(() => {
+        setVisibleIds(results.map(b => b.id));
+        return () => setVisibleIds([]);
+    }, [results, setVisibleIds]);
 
     return (
         <div className="search-view">
@@ -78,7 +87,7 @@ export function SearchView() {
                         }}>
                             {bullet.date ? format(parseISO(bullet.date), 'MMMM d, yyyy') : 'Undated'}
                         </div>
-                        <BulletItem bullet={bullet} />
+                        <BulletItem bullet={bullet} isFocused={bullet.id === focusedId} />
                     </div>
                 ))}
             </div>

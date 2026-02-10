@@ -7,9 +7,10 @@ import { motion } from 'framer-motion';
 
 interface SortableBulletItemProps {
     bullet: Bullet;
+    isFocused?: boolean;
 }
 
-export function SortableBulletItem({ bullet }: SortableBulletItemProps) {
+export function SortableBulletItem({ bullet, isFocused }: SortableBulletItemProps) {
     const {
         attributes,
         listeners,
@@ -40,7 +41,7 @@ export function SortableBulletItem({ bullet }: SortableBulletItemProps) {
             exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
             transition={{ duration: 0.2 }}
         >
-            <BulletItem bullet={bullet} />
+            <BulletItem bullet={bullet} isFocused={isFocused} />
         </motion.div>
     );
 }
