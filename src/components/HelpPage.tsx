@@ -5,7 +5,7 @@ export function HelpPage() {
     return (
         <div className="help-page" style={{ maxWidth: '800px', margin: '0 auto', color: 'hsl(var(--color-text-primary))' }}>
             <header style={{ marginBottom: '3rem', textAlign: 'center' }}>
-                <h1 style={{ fontSize: '3rem', fontWeight: 700, marginBottom: '1rem' }}>Methodology</h1>
+                <h1 className="section-title" style={{ marginBottom: '1rem' }}>Methodology</h1>
                 <p style={{ fontSize: '1.2rem', color: 'hsl(var(--color-text-secondary))', maxWidth: '600px', margin: '0 auto' }}>
                     Welcome to <strong>Last Task</strong>. This app is designed around the Bullet Journal® method—a mindfulness practice disguised as a productivity system.
                 </p>

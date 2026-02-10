@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Circle, X, Minus, ChevronRight, Trash, FileText, FolderInput, Calendar } from 'lucide-react';
+import { Circle, X, Minus, ChevronRight, Trash, FileText, FolderInput, Calendar, MoreVertical } from 'lucide-react';
 import type { Bullet } from '../types';
 import { useStore } from '../store';
 import { DatePicker } from './DatePicker';
@@ -16,7 +16,7 @@ export function BulletItem({ bullet }: BulletItemProps) {
     const { state, dispatch } = useStore();
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showProjectPicker, setShowProjectPicker] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
     const { openNote } = useNoteEditor();
     const { requestConfirmation } = useConfirmation();
 
@@ -62,15 +62,13 @@ export function BulletItem({ bullet }: BulletItemProps) {
                 style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '1rem',
+                    gap: '0.75rem',
                     padding: '0.5rem 0',
                     opacity: isMigrated ? 0.5 : 1,
                     textDecoration: isCompleted ? 'line-through' : 'none',
                     color: isCompleted || isMigrated ? 'hsl(var(--color-text-secondary))' : 'inherit',
                     position: 'relative'
                 }}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => { setIsHovered(false); if (!showDatePicker) setShowDatePicker(false); }}
             >
                 <button
                     onClick={toggleState}
@@ -159,82 +157,106 @@ export function BulletItem({ bullet }: BulletItemProps) {
                     )}
                 </span>
 
-                {/* Actions that appear on hover */}
-                {isHovered && !hasNote && (
+                {/* Three-dot kebab menu */}
+                <div style={{ position: 'relative' }}>
                     <button
-                        onClick={() => openNote(bullet.id)}
-                        className="btn btn-ghost"
-                        style={{
-                            padding: '0.25rem',
-                            height: 'auto',
-                            color: 'hsl(var(--color-text-secondary))',
-                            opacity: 0.5
-                        }}
-                        title="Add Note"
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        className="btn btn-ghost bullet-menu-btn"
+                        style={{ padding: '0.25rem', height: 'auto', color: 'hsl(var(--color-text-secondary))', opacity: 0.5 }}
+                        title="Actions"
                     >
-                        <FileText size={14} />
+                        <MoreVertical size={16} />
                     </button>
-                )}
 
-                {/* Always available actions on hover */}
-                {(isHovered || showProjectPicker || showDatePicker) && (
-                    <div style={{ position: 'relative', display: 'flex', gap: '0.25rem' }}>
-
-                        {/* Project Picker */}
-                        <button
-                            onClick={() => setShowProjectPicker(!showProjectPicker)}
-                            className="btn btn-ghost"
-                            style={{ padding: '0.25rem', height: 'auto', color: 'hsl(var(--color-text-secondary))' }}
-                            title="Move to Project"
-                        >
-                            <FolderInput size={16} />
-                        </button>
-                        {showProjectPicker && (
-                            <ProjectPicker
-                                currentCollectionId={bullet.collectionId || undefined}
-                                onSelectProject={(collectionId) => {
-                                    dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, collectionId: collectionId || undefined } });
-                                    setShowProjectPicker(false);
-                                }}
-                                onCancel={() => setShowProjectPicker(false)}
+                    {menuOpen && (
+                        <>
+                            <div
+                                style={{ position: 'fixed', inset: 0, zIndex: 9 }}
+                                onClick={() => { setMenuOpen(false); setShowDatePicker(false); setShowProjectPicker(false); }}
                             />
-                        )}
+                            <div className="bullet-menu" style={{
+                                position: 'absolute',
+                                zIndex: 10,
+                                right: 0,
+                                top: '100%',
+                                background: 'hsl(var(--color-bg-secondary))',
+                                border: '1px solid hsl(var(--color-text-secondary) / 0.2)',
+                                borderRadius: 'var(--radius-md)',
+                                boxShadow: 'var(--shadow-md)',
+                                padding: '0.25rem',
+                                minWidth: '180px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}>
+                                {/* Add / View Note */}
+                                <button
+                                    onClick={() => { openNote(bullet.id); setMenuOpen(false); }}
+                                    className="btn btn-ghost"
+                                    style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
+                                >
+                                    <FileText size={14} /> {hasNote ? 'View Note' : 'Add Note'}
+                                </button>
 
-                        {/* Date Picker */}
-                        <button
-                            onClick={() => setShowDatePicker(!showDatePicker)}
-                            className="btn btn-ghost"
-                            style={{ padding: '0.25rem', height: 'auto', color: 'hsl(var(--color-text-secondary))' }}
-                            title="Assign Date"
-                        >
-                            <Calendar size={16} />
-                        </button>
-                        {showDatePicker && (
-                            <DatePicker
-                                currentDate={bullet.date || undefined}
-                                onSelectDate={handleDateSelect}
-                                onCancel={() => setShowDatePicker(false)}
-                            />
-                        )}
+                                {/* Project Picker */}
+                                <button
+                                    onClick={() => setShowProjectPicker(!showProjectPicker)}
+                                    className="btn btn-ghost"
+                                    style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
+                                >
+                                    <FolderInput size={14} /> Move to Project
+                                </button>
+                                {showProjectPicker && (
+                                    <ProjectPicker
+                                        currentCollectionId={bullet.collectionId || undefined}
+                                        onSelectProject={(collectionId) => {
+                                            dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, collectionId: collectionId || undefined } });
+                                            setShowProjectPicker(false);
+                                            setMenuOpen(false);
+                                        }}
+                                        onCancel={() => setShowProjectPicker(false)}
+                                    />
+                                )}
 
-                        <button
-                            onClick={() => {
-                                requestConfirmation({
-                                    title: 'Delete Item',
-                                    message: 'Delete this item?',
-                                    isDanger: true,
-                                    confirmLabel: 'Delete',
-                                    onConfirm: () => dispatch({ type: 'DELETE_BULLET', payload: { id: bullet.id } })
-                                });
-                            }}
-                            className="btn btn-ghost"
-                            style={{ padding: '0.25rem', height: 'auto', color: 'hsl(var(--color-danger))' }}
-                            title="Delete"
-                        >
-                            <Trash size={16} />
-                        </button>
-                    </div>
-                )}
+                                {/* Date Picker */}
+                                <button
+                                    onClick={() => setShowDatePicker(!showDatePicker)}
+                                    className="btn btn-ghost"
+                                    style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
+                                >
+                                    <Calendar size={14} /> Assign Date
+                                </button>
+                                {showDatePicker && (
+                                    <DatePicker
+                                        currentDate={bullet.date || undefined}
+                                        onSelectDate={(date) => {
+                                            handleDateSelect(date);
+                                            setMenuOpen(false);
+                                        }}
+                                        onCancel={() => setShowDatePicker(false)}
+                                    />
+                                )}
+
+                                {/* Delete */}
+                                <button
+                                    onClick={() => {
+                                        requestConfirmation({
+                                            title: 'Delete Item',
+                                            message: 'Delete this item?',
+                                            isDanger: true,
+                                            confirmLabel: 'Delete',
+                                            onConfirm: () => dispatch({ type: 'DELETE_BULLET', payload: { id: bullet.id } })
+                                        });
+                                        setMenuOpen(false);
+                                    }}
+                                    className="btn btn-ghost"
+                                    style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem', color: 'hsl(var(--color-danger))', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)', marginTop: '0.25rem' }}
+                                >
+                                    <Trash size={14} /> Delete
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
             </div>
         </>
     );

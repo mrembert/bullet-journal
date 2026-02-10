@@ -26,10 +26,10 @@ export function FutureLog() {
 
     return (
         <div className="future-log">
-            <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <header className="page-header" style={{ marginBottom: '2rem', alignItems: 'flex-end' }}>
                 <div>
-                    <h2 style={{ fontSize: '2rem', fontWeight: 300, color: 'hsl(var(--color-text-secondary))' }}>Future Log</h2>
-                    <h1 style={{ fontSize: '3rem', fontWeight: 700 }}>Overview</h1>
+                    <h2 className="page-subtitle">Future Log</h2>
+                    <h1 className="section-title">Overview</h1>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
                     <button
@@ -53,7 +53,7 @@ export function FutureLog() {
                 </div>
             </header>
 
-            <div style={{
+            <div className="future-log-grid" style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                 gap: '2rem'

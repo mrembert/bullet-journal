@@ -46,10 +46,10 @@ export function WeekLog() {
 
     return (
         <div className="week-log">
-            <header style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <header className="page-header" style={{ marginBottom: '2rem' }}>
                 <div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 300, color: 'hsl(var(--color-text-secondary))' }}>Week of</h2>
-                    <h1 style={{ fontSize: '2.5rem', fontWeight: 700, lineHeight: 1 }}>
+                    <h2 className="page-subtitle">Week of</h2>
+                    <h1 className="section-title">
                         {format(startOfCurrentWeek, 'MMM d')} - {format(endOfWeek(currentDate, { weekStartsOn: 1 }), 'MMM d, yyyy')}
                     </h1>
                 </div>

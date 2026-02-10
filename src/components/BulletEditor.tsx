@@ -50,7 +50,7 @@ export function BulletEditor({ defaultDate, autoFocus = true }: { defaultDate?: 
     const projects = Object.values(state.collections).filter(c => c.type === 'project');
 
     return (
-        <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+        <div className="bullet-editor-row" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
             <input
                 type="text"
                 className="input"

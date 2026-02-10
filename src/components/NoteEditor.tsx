@@ -79,7 +79,7 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
     }, [dispatch, bullet.date, bullet.collectionId, bulletId]);
 
     return createPortal(
-        <div style={{
+        <div className="note-editor-overlay" style={{
             position: 'fixed',
             top: 0,
             left: 0,
@@ -91,23 +91,15 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
             alignItems: 'center',
             zIndex: 9999,
         }} onClick={handleClose}>
-            <div style={{
-                backgroundColor: 'hsl(var(--color-bg-primary))',
-                width: '80%',
-                maxWidth: '800px',
-                height: '80%',
-                borderRadius: 'var(--radius-lg)',
-                boxShadow: 'var(--shadow-lg)',
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden'
-            }} onClick={e => e.stopPropagation()}>
+            <div className="note-editor-content" onClick={e => e.stopPropagation()}>
                 <header style={{
                     padding: '1rem',
                     borderBottom: '1px solid hsl(var(--color-text-secondary) / 0.1)',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    flexWrap: 'wrap'
                 }}>
                     <div>
                         <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Note for: {bullet.content}</h3>

@@ -154,3 +154,244 @@ h6 {
 .input::placeholder {
   color: hsl(var(--color-text-secondary) / 0.5);
 }
+
+/* ===== Responsive Typography ===== */
+
+.page-title {
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.page-subtitle {
+  font-size: 2rem;
+  font-weight: 300;
+  color: hsl(var(--color-text-secondary));
+}
+
+.section-title {
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.page-header {
+  margin-bottom: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 2rem;
+  }
+
+  .page-subtitle {
+    font-size: 1.25rem;
+  }
+
+  .section-title {
+    font-size: 1.75rem;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .view-controls {
+    width: 100%;
+    justify-content: flex-start !important;
+  }
+}
+
+/* ===== Layout: Sidebar + Main ===== */
+
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  border-right: 1px solid hsl(var(--color-text-secondary) / 0.1);
+  padding: 2rem 1rem;
+  background-color: hsl(var(--color-bg-secondary));
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-content {
+  margin-left: 260px;
+  padding: 3rem;
+  min-height: 100vh;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+.hamburger-btn {
+  display: none;
+}
+
+.mobile-header {
+  display: none;
+}
+
+/* Mobile: sidebar becomes a drawer */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 99;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .sidebar-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 1.5rem 1rem;
+  }
+
+  .hamburger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: hsl(var(--color-text-primary));
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .hamburger-btn:hover {
+    background: hsl(var(--color-text-secondary) / 0.1);
+  }
+
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid hsl(var(--color-text-secondary) / 0.1);
+  }
+
+  /* NoteEditor: full-screen on mobile */
+  .note-editor-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+  }
+
+  /* FutureLog: single column on mobile */
+  .future-log-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* BulletEditor: stack input + select on mobile */
+  .bullet-editor-row {
+    flex-direction: column;
+  }
+
+  .bullet-editor-row select {
+    max-width: 100% !important;
+  }
+
+  /* Touch targets: minimum 44px on mobile */
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent iOS zoom on input focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ===== NoteEditor Modal ===== */
+
+.note-editor-content {
+  background-color: hsl(var(--color-bg-primary));
+  width: 80%;
+  max-width: 800px;
+  height: 80%;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ===== Picker Overlay (DatePicker, ProjectPicker) ===== */
+
+.picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.picker-panel {
+  background: hsl(var(--color-bg-secondary));
+  border: 1px solid hsl(var(--color-text-secondary) / 0.2);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem;
+  min-width: 240px;
+  max-width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* ===== Touch & Mobile Polish ===== */
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .sidebar {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+
+  .main-content {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}

@@ -1,4 +1,4 @@
-import { BookOpen, Calendar, Star, List, ChevronLeft, ChevronRight, Plus, Columns, Search, Download, Upload, Moon, Sun, Archive, HelpCircle, MessageSquare, Trash2, ArchiveRestore, Eye, EyeOff } from 'lucide-react';
+import { BookOpen, Calendar, Star, List, ChevronLeft, ChevronRight, Plus, Columns, Search, Download, Upload, Moon, Sun, Archive, HelpCircle, MessageSquare, Trash2, ArchiveRestore, Eye, EyeOff, Menu } from 'lucide-react';
 import { DailyLog } from './components/DailyLog';
 import { FutureLog } from './components/FutureLog';
 import { CollectionView } from './components/CollectionView';
@@ -22,6 +22,9 @@ function App() {
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
   const [newCollectionTitle, setNewCollectionTitle] = useState('');
   const [showArchived, setShowArchived] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const closeSidebar = () => setSidebarOpen(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { openNoteId, closeNote } = useNoteEditor();
   const { requestConfirmation } = useConfirmation();
@@ -70,6 +73,7 @@ function App() {
 
   const setView = (mode: 'daily' | 'future' | 'collection' | 'week' | 'search' | 'backlog' | 'help', date?: string, collectionId?: string) => {
     dispatch({ type: 'SET_VIEW', payload: { mode, date: date || state.view.date, collectionId } });
+    closeSidebar();
   };
 
   const changeDate = (days: number) => {
@@ -134,19 +138,14 @@ function App() {
 
   return (
     <div className="layout">
+      {/* Sidebar Overlay (mobile) */}
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
+        onClick={closeSidebar}
+      />
+
       {/* Sidebar Navigation */}
-      <aside className="sidebar" style={{
-        width: '260px',
-        height: '100vh',
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        borderRight: '1px solid hsl(var(--color-text-secondary) / 0.1)',
-        padding: '2rem 1rem',
-        backgroundColor: 'hsl(var(--color-bg-secondary))',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <BookOpen size={20} /> Last Task
@@ -329,16 +328,24 @@ function App() {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main style={{ marginLeft: '260px', padding: '3rem', minHeight: '100vh' }}>
+      <main className="main-content">
+        {/* Mobile header bar - visible only on small screens */}
+        <div className="mobile-header">
+          <button className="hamburger-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
+            <Menu size={24} />
+          </button>
+          <span style={{ fontWeight: 600, fontSize: '1rem' }}>Last Task</span>
+          <div style={{ width: '40px' }} /> {/* spacer for centering */}
+        </div>
+
         {isDaily && (
           <>
-            <header style={{ marginBottom: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <header className="page-header">
               <div>
-                <h2 style={{ fontSize: '2rem', fontWeight: 300, color: 'hsl(var(--color-text-secondary))' }}>
+                <h2 className="page-subtitle">
                   {format(currentDate, 'EEEE')}
                 </h2>
-                <h1 style={{ fontSize: '4rem', fontWeight: 700, lineHeight: 1 }}>
+                <h1 className="page-title">
                   {format(currentDate, 'MMMM d')}
                 </h1>
               </div>

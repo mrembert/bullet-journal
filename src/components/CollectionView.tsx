@@ -71,7 +71,7 @@ export function CollectionView() {
                         <h3 style={{ fontSize: '1rem', textTransform: 'uppercase', color: 'hsl(var(--color-text-secondary))', letterSpacing: '0.05em' }}>
                             {collection.type}
                         </h3>
-                        <h1 style={{ fontSize: '3rem', fontWeight: 700 }}>
+                        <h1 className="section-title">
                             {collection.title}
                         </h1>
                     </div>
