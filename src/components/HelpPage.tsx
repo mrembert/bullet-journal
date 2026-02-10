@@ -1,5 +1,9 @@
 
-import { BookOpen, Star, Columns, Calendar, List, Edit3, ArrowRight, X, Search, Archive, FileText, FolderInput, GripVertical, Keyboard, Moon, Download, CheckSquare, MoreVertical, MessageSquare } from 'lucide-react';
+import {
+    BookOpen, Star, Columns, Calendar, List, Edit3, ArrowRight, X, Search,
+    Archive, FileText, FolderInput, Keyboard, Moon, Download, CheckSquare,
+    MoreVertical, MessageSquare
+} from 'lucide-react';
 
 export function HelpPage() {
     const sectionStyle = { marginBottom: '4rem' };
