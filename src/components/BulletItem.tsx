@@ -227,7 +227,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                 </button>
                                 {showProjectPicker && (
                                     <ProjectPicker
-                                        currentCollectionId={bullet.collectionId || undefined}
+                                        currentCollectionId={bullet.collectionId === null ? undefined : bullet.collectionId}
                                         onSelectProject={(collectionId) => {
                                             dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, collectionId: collectionId || undefined } });
                                             setShowProjectPicker(false);

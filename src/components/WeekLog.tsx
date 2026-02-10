@@ -33,10 +33,10 @@ export function WeekLog() {
     const datesInRange = daysOfWeek.map(d => format(d, 'yyyy-MM-dd'));
 
     const weekBullets = Object.values(state.bullets).filter(b =>
-        (b.collectionId ? true : true) && !!b.date && datesInRange.includes(b.date)
+        (b.collectionId ? true : true) && typeof b.date === 'string' && datesInRange.includes(b.date)
     ).sort((a, b) => {
         // Sort by date then order
-        if (a.date !== b.date) return (a.date || '').localeCompare(b.date || '');
+        if (a.date !== b.date) return String(a.date || '').localeCompare(String(b.date || ''));
         return (a.order || 0) - (b.order || 0);
     });
 
