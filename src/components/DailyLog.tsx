@@ -25,7 +25,7 @@ export function DailyLog() {
 
     // Filter bullets for the current date
     const dailyBullets = Object.values(state.bullets)
-        .filter((b) => b.date === date && !b.collectionId)
+        .filter((b) => b.date === date)
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 
     const sensors = useSensors(

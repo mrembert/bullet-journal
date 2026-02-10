@@ -89,13 +89,27 @@ function reducer(state: AppState, action: Action): AppState {
             return { ...state, bullets: remainingBullets };
         }
         case 'MIGRATE_BULLET': {
-            // Create a copy or move? Usually migration in BuJo means rewriting it on the new date.
-            // Digitally, we can just update the date date and state.
-            // Or we can mark the old one as 'migrated' and create a new one.
-            // Let's go with the traditional "migrated" marker > old one stays, new one created.
             const oldBullet = state.bullets[action.payload.id];
             if (!oldBullet) return state;
 
+            // If it belongs to a collection, we just schedule it (update date), we don't clone it.
+            // This keeps it as a single entity shared between Project and Daily Log.
+            if (oldBullet.collectionId) {
+                return {
+                    ...state,
+                    bullets: {
+                        ...state.bullets,
+                        [oldBullet.id]: {
+                            ...oldBullet,
+                            date: action.payload.targetDate,
+                            updatedAt: Date.now(),
+                        }
+                    }
+                };
+            }
+
+            // Normal migration (Task -> Next Day)
+            // Mark old one as 'migrated' and create a new one.
             const newId = uuidv4();
             const now = Date.now();
 

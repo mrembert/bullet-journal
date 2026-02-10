@@ -175,7 +175,14 @@ function App() {
               <form onSubmit={createCollection} style={{ marginBottom: '0.5rem', padding: '0 0.5rem' }}>
                 <input
                   className="input"
-                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem', background: 'white', borderRadius: '4px' }}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    fontSize: '0.9rem',
+                    background: 'hsl(var(--color-bg-primary))',
+                    color: 'hsl(var(--color-text-primary))',
+                    borderRadius: '4px',
+                    border: '1px solid hsl(var(--color-text-secondary) / 0.2)'
+                  }}
                   autoFocus
                   placeholder="Project Name..."
                   value={newCollectionTitle}

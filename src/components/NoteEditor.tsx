@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store';
-import { X, Save } from 'lucide-react';
+import { X, Save, Trash } from 'lucide-react';
 
 interface NoteEditorProps {
     bulletId: string;
@@ -28,7 +29,17 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
         onClose();
     };
 
-    return (
+    const handleDelete = () => {
+        if (window.confirm('Are you sure you want to delete this note?')) {
+            dispatch({
+                type: 'UPDATE_BULLET',
+                payload: { id: bulletId, longFormContent: '' }
+            });
+            onClose();
+        }
+    };
+
+    return createPortal(
         <div style={{
             position: 'fixed',
             top: 0,
@@ -39,8 +50,8 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            zIndex: 1000,
-        }}>
+            zIndex: 9999, // Increased z-index
+        }} onClick={onClose}>
             <div style={{
                 backgroundColor: 'hsl(var(--color-bg-primary))',
                 width: '80%',
@@ -51,7 +62,7 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden'
-            }}>
+            }} onClick={e => e.stopPropagation()}>
                 <header style={{
                     padding: '1rem',
                     borderBottom: '1px solid hsl(var(--color-text-secondary) / 0.1)',
@@ -66,6 +77,9 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={handleDelete} className="btn btn-ghost" style={{ color: 'hsl(var(--color-danger))' }} title="Delete Note">
+                            <Trash size={18} />
+                        </button>
                         <button onClick={handleSave} className="btn btn-primary">
                             <Save size={18} /> Save
                         </button>
@@ -96,6 +110,7 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
                     />
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

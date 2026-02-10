@@ -10,10 +10,13 @@ interface BulletItemProps {
 }
 
 export function BulletItem({ bullet }: BulletItemProps) {
-    const { dispatch } = useStore();
+    const { state, dispatch } = useStore();
     const [showMigration, setShowMigration] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [showNoteEditor, setShowNoteEditor] = useState(false);
+
+    const collection = bullet.collectionId ? state.collections[bullet.collectionId] : null;
+    const showCollectionTag = collection && state.view.collectionId !== bullet.collectionId;
 
     const toggleState = () => {
         if (bullet.state === 'open') {
@@ -84,6 +87,19 @@ export function BulletItem({ bullet }: BulletItemProps) {
 
                 <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {bullet.content}
+                    {showCollectionTag && (
+                        <span style={{
+                            fontSize: '0.7rem',
+                            padding: '0.1rem 0.3rem',
+                            borderRadius: '4px',
+                            backgroundColor: 'hsl(var(--color-bg-secondary))',
+                            color: 'hsl(var(--color-text-secondary))',
+                            border: '1px solid hsl(var(--color-text-secondary) / 0.2)',
+                            whiteSpace: 'nowrap'
+                        }}>
+                            {collection?.title}
+                        </span>
+                    )}
                     {hasNote && (
                         <button
                             onClick={() => setShowNoteEditor(true)}

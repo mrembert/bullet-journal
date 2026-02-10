@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../store';
 import { SortableBulletItem } from './SortableBulletItem';
 import { BulletEditor } from './BulletEditor';
+import { Eye, EyeOff } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -21,6 +22,7 @@ import {
 export function CollectionView() {
     const { state, dispatch } = useStore();
     const { collectionId } = state.view;
+    const [showCompleted, setShowCompleted] = useState(false);
 
     const collection = collectionId ? state.collections[collectionId] : null;
 
@@ -29,10 +31,15 @@ export function CollectionView() {
     // Filter bullets for this collection
     const bullets = Object.values(state.bullets)
         .filter((b) => b.collectionId === collectionId)
+        .filter((b) => showCompleted || b.state !== 'completed')
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -59,12 +66,24 @@ export function CollectionView() {
     return (
         <div className="collection-view">
             <header style={{ marginBottom: '3rem' }}>
-                <h3 style={{ fontSize: '1rem', textTransform: 'uppercase', color: 'hsl(var(--color-text-secondary))', letterSpacing: '0.05em' }}>
-                    {collection.type}
-                </h3>
-                <h1 style={{ fontSize: '3rem', fontWeight: 700 }}>
-                    {collection.title}
-                </h1>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                        <h3 style={{ fontSize: '1rem', textTransform: 'uppercase', color: 'hsl(var(--color-text-secondary))', letterSpacing: '0.05em' }}>
+                            {collection.type}
+                        </h3>
+                        <h1 style={{ fontSize: '3rem', fontWeight: 700 }}>
+                            {collection.title}
+                        </h1>
+                    </div>
+                    <button
+                        onClick={() => setShowCompleted(!showCompleted)}
+                        className="btn btn-ghost"
+                        style={{ color: 'hsl(var(--color-text-secondary))' }}
+                        title={showCompleted ? "Hide Completed" : "Show Completed"}
+                    >
+                        {showCompleted ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                </div>
             </header>
 
             <div className="collection-list">
