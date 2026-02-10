@@ -2,9 +2,17 @@ import React, { useState } from 'react';
 import { useStore } from '../store';
 import type { BulletType } from '../types';
 
-export function BulletEditor({ defaultDate }: { defaultDate?: string }) {
+export function BulletEditor({ defaultDate, autoFocus = true }: { defaultDate?: string, autoFocus?: boolean }) {
     const [content, setContent] = useState('');
     const { state, dispatch } = useStore();
+
+    const [selectedCollectionId, setSelectedCollectionId] = useState<string>('');
+
+    // Reset selection when collectionId view changes, or keep it sticky?
+    // For now, let's strictly follow the current view's collectionId if present, 
+    // otherwise allow selection.
+
+    const effectiveCollectionId = state.view.collectionId || selectedCollectionId;
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && content.trim()) {
@@ -30,15 +38,19 @@ export function BulletEditor({ defaultDate }: { defaultDate?: string }) {
                     content: cleanContent,
                     type,
                     date: targetDate,
-                    collectionId: state.view.collectionId
+                    collectionId: effectiveCollectionId || undefined
                 }
             });
             setContent('');
+            // Keep the selected collection sticky? Or reset?
+            // Let's keep it sticky for rapid entry.
         }
     };
 
+    const projects = Object.values(state.collections).filter(c => c.type === 'project');
+
     return (
-        <div style={{ marginTop: '1rem' }}>
+        <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
             <input
                 type="text"
                 className="input"
@@ -46,8 +58,30 @@ export function BulletEditor({ defaultDate }: { defaultDate?: string }) {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 onKeyDown={handleKeyDown}
-                autoFocus
+                autoFocus={autoFocus}
+                style={{ flex: 1 }}
             />
+
+            {!state.view.collectionId && (
+                <select
+                    value={selectedCollectionId}
+                    onChange={(e) => setSelectedCollectionId(e.target.value)}
+                    style={{
+                        padding: '0.5rem',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid hsl(var(--color-text-secondary) / 0.2)',
+                        backgroundColor: 'hsl(var(--color-bg-primary))',
+                        color: 'hsl(var(--color-text-secondary))',
+                        fontSize: '0.85rem',
+                        maxWidth: '120px'
+                    }}
+                >
+                    <option value="">No Project</option>
+                    {projects.map(p => (
+                        <option key={p.id} value={p.id}>{p.title}</option>
+                    ))}
+                </select>
+            )}
         </div>
     );
 }

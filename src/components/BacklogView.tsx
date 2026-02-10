@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useStore } from '../store';
 import { BulletItem } from './BulletItem';
 import { Archive, AlertCircle } from 'lucide-react';

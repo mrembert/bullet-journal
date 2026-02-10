@@ -2,17 +2,22 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import type { AppState, Bullet, Collection, BulletType, ViewMode, BulletState } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
+import { useAuth } from './contexts/AuthContext';
+import { performActionInFirestore, subscribeToUserData } from './lib/database';
 
 // --- Actions ---
+// NOTE: We now require IDs for creation actions because the Dispatch wrapper generates them
+// to ensure consistency between Local Optimistic UI and Firestore Write.
 type Action =
-    | { type: 'ADD_BULLET'; payload: { content: string; type: BulletType; date: string; collectionId?: string } }
+    | { type: 'ADD_BULLET'; payload: { id: string; content: string; type: BulletType; date: string; collectionId?: string } }
     | { type: 'UPDATE_BULLET'; payload: { id: string; content?: string; state?: BulletState; longFormContent?: string } }
     | { type: 'DELETE_BULLET'; payload: { id: string } }
     | { type: 'SET_VIEW'; payload: { mode: ViewMode; date?: string; collectionId?: string } }
-    | { type: 'ADD_COLLECTION'; payload: { title: string; type: Collection['type'] } }
-    | { type: 'MIGRATE_BULLET'; payload: { id: string; targetDate: string } }
+    | { type: 'ADD_COLLECTION'; payload: { id: string; title: string; type: Collection['type'] } }
+    | { type: 'MIGRATE_BULLET'; payload: { id: string; targetDate: string; newId?: string } }
     | { type: 'REORDER_BULLETS'; payload: { items: { id: string, order: number }[] } }
-    | { type: 'LOAD_DATA'; payload: AppState };
+    | { type: 'TOGGLE_PREFERENCE'; payload: { key: keyof AppState['preferences'] } }
+    | { type: 'LOAD_DATA'; payload: Partial<AppState> }; // Partial loading for sync
 
 // --- Initial State ---
 const initialState: AppState = {
@@ -22,23 +27,23 @@ const initialState: AppState = {
         mode: 'daily',
         date: format(new Date(), 'yyyy-MM-dd'),
     },
+    preferences: {
+        groupByProject: false,
+        showCompleted: true,
+        showMigrated: false,
+    },
 };
 
 // --- Reducer ---
 function reducer(state: AppState, action: Action): AppState {
     switch (action.type) {
         case 'ADD_BULLET': {
-            const id = uuidv4();
+            const { id, ...data } = action.payload;
             const now = Date.now();
-            // Find max order for current view? Or just use timestamp.
-            // Timestamp is good enough for appending.
             const newBullet: Bullet = {
                 id,
-                content: action.payload.content,
-                type: action.payload.type,
+                ...data, // content, type, date, collectionId
                 state: 'open',
-                date: action.payload.date,
-                collectionId: action.payload.collectionId,
                 order: now,
                 createdAt: now,
                 updatedAt: now,
@@ -77,6 +82,7 @@ function reducer(state: AppState, action: Action): AppState {
         }
         case 'REORDER_BULLETS': {
             const newBullets = { ...state.bullets };
+            // Ensure we handle potential undefined bullets gracefully
             action.payload.items.forEach(({ id, order }) => {
                 if (newBullets[id]) {
                     newBullets[id] = { ...newBullets[id], order };
@@ -93,7 +99,6 @@ function reducer(state: AppState, action: Action): AppState {
             if (!oldBullet) return state;
 
             // If it belongs to a collection, we just schedule it (update date), we don't clone it.
-            // This keeps it as a single entity shared between Project and Daily Log.
             if (oldBullet.collectionId) {
                 return {
                     ...state,
@@ -109,8 +114,7 @@ function reducer(state: AppState, action: Action): AppState {
             }
 
             // Normal migration (Task -> Next Day)
-            // Mark old one as 'migrated' and create a new one.
-            const newId = uuidv4();
+            const newId = action.payload.newId || uuidv4();
             const now = Date.now();
 
             return {
@@ -141,7 +145,7 @@ function reducer(state: AppState, action: Action): AppState {
             };
         }
         case 'ADD_COLLECTION': {
-            const id = uuidv4();
+            const { id, ...data } = action.payload;
             const now = Date.now();
             return {
                 ...state,
@@ -149,23 +153,35 @@ function reducer(state: AppState, action: Action): AppState {
                     ...state.collections,
                     [id]: {
                         id,
-                        title: action.payload.title,
-                        type: action.payload.type,
+                        title: data.title,
+                        type: data.type,
                         createdAt: now,
                     },
                 },
             };
         }
-        case 'DELETE_BULLET': {
-            const { id } = action.payload;
-            const { [id]: deleted, ...remainingBullets } = state.bullets;
+        case 'TOGGLE_PREFERENCE': {
             return {
                 ...state,
-                bullets: remainingBullets,
+                preferences: {
+                    ...state.preferences,
+                    [action.payload.key]: !state.preferences[action.payload.key]
+                }
             };
         }
         case 'LOAD_DATA': {
-            return action.payload;
+            const newState = {
+                ...state,
+                bullets: { ...state.bullets, ...(action.payload.bullets || {}) },
+                collections: { ...state.collections, ...(action.payload.collections || {}) },
+            };
+            // Preserve local preferences if not in payload, or maybe we want to sync them?
+            // For now, let's assume preferences are local-only or we can sync them if we add them to Firestore.
+            // But since payload is Partial<AppState>, if preferences are there, we take them.
+            if (action.payload.preferences) {
+                newState.preferences = { ...state.preferences, ...action.payload.preferences };
+            }
+            return newState;
         }
         default:
             return state;
@@ -175,29 +191,58 @@ function reducer(state: AppState, action: Action): AppState {
 // --- Context ---
 const StoreContext = createContext<{
     state: AppState;
-    dispatch: React.Dispatch<Action>;
+    dispatch: React.Dispatch<any>; // Using any to accept Actions without explicit IDs from Components if using wrapper
 }>({ state: initialState, dispatch: () => null });
 
 export function useStore() {
     return useContext(StoreContext);
 }
 
-const STORAGE_KEY = 'bujo-app-data';
-
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-    const [state, dispatch] = useReducer(reducer, initialState, (defaultState) => {
-        try {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            return stored ? JSON.parse(stored) : defaultState;
-        } catch (e) {
-            console.error("Failed to load state", e);
-            return defaultState;
-        }
-    });
+    // 1. Initialize with basic state (no localStorage)
+    const [state, rawDispatch] = useReducer(reducer, initialState);
+    const { user } = useAuth();
 
+    // 2. Subscribe to Firestore
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }, [state]);
+        if (!user) return; // Wait for auth
+
+        console.log("Store: Subscribing to user data for", user.uid);
+        const unsubscribe = subscribeToUserData(user.uid, (data) => {
+            rawDispatch({ type: 'LOAD_DATA', payload: data });
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
+    // 3. Dispatch Wrapper
+    // This intercepts actions, generates IDs if needed, updates local state, AND calls Firestore
+    const dispatch = async (action: any) => {
+        // Enforce ID generation for creations
+        let enhancedAction = { ...action };
+
+        if (action.type === 'ADD_BULLET' && !action.payload.id) {
+            enhancedAction.payload.id = uuidv4();
+        }
+        if (action.type === 'ADD_COLLECTION' && !action.payload.id) {
+            enhancedAction.payload.id = uuidv4();
+        }
+        if (action.type === 'MIGRATE_BULLET' && !action.payload.newId) {
+            // Only if not collection-based. But safely we can just generate one.
+            enhancedAction.payload.newId = uuidv4();
+        }
+
+        // 1. Optimistic Update (Local)
+        rawDispatch(enhancedAction);
+
+        // 2. Side Effect (Firestore)
+        if (user) {
+            // We verify it's a data-modifying action, not UI (SET_VIEW)
+            if (action.type !== 'SET_VIEW' && action.type !== 'LOAD_DATA') {
+                performActionInFirestore(user.uid, enhancedAction, state);
+            }
+        }
+    };
 
     return (
         <StoreContext.Provider value={{ state, dispatch }}>

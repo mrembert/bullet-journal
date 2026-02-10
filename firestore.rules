@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is in allowed_users
+    // Note: Recursive lookups in rules can be expensive/complex.
+    // For now, we will trust the client to check 'allowed_users' for the "Unauthorized" screen,
+    // BUT we must enforce it for actual data access.
+    
+    // 1. Allow reading 'allowed_users' by any authenticated user
+    // This allows the "Invitation Only" check to run.
+    match /allowed_users/{email} {
+      allow read: if request.auth != null && request.auth.token.email == email;
+    }
+
+    // 2. Allow users to read/write their OWN data
+    match /users/{userId}/{document=**} {
+      // Check if the requesting user matches the path userId
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // OPTIONAL: Add a refined check to ensure they are ALSO in allowed_users
+      // allow read, write: if request.auth != null && request.auth.uid == userId && exists(/databases/$(database)/documents/allowed_users/$(request.auth.token.email));
+    }
+  }
+}

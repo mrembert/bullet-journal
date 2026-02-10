@@ -13,6 +13,7 @@ export interface Bullet {
     updatedAt: number;
     completedAt?: number;
     longFormContent?: string; // For meeting notes or detailed descriptions
+    parentNoteId?: string; // ID of the note where this task was created
 }
 
 export interface Collection {
@@ -22,7 +23,7 @@ export interface Collection {
     createdAt: number;
 }
 
-export type ViewMode = 'daily' | 'week' | 'future' | 'collection' | 'search' | 'backlog';
+export type ViewMode = 'daily' | 'week' | 'future' | 'collection' | 'search' | 'backlog' | 'help';
 
 export interface AppState {
     bullets: Record<string, Bullet>; // ID -> Bullet
@@ -31,5 +32,10 @@ export interface AppState {
         mode: ViewMode;
         date: string; // Current date being viewed (for daily log)
         collectionId?: string; // If viewing a collection
+    };
+    preferences: {
+        groupByProject: boolean;
+        showCompleted: boolean;
+        showMigrated: boolean; // Optional: might want to toggle moved items too
     };
 }

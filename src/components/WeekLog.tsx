@@ -1,12 +1,13 @@
-import React from 'react';
 import { useStore } from '../store';
-import { BulletItem } from './BulletItem';
 import { BulletEditor } from './BulletEditor';
 import { format, startOfWeek, addDays, isSameDay, parseISO, endOfWeek } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Grid, Layers, CheckSquare } from 'lucide-react';
+import { TaskGroupList } from './TaskGroupList';
 
 export function WeekLog() {
     const { state, dispatch } = useStore();
+    const { groupByProject, showCompleted } = state.preferences;
+
     // Use state.view.date as the anchor for the week
     const currentDate = parseISO(state.view.date);
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday start
@@ -17,11 +18,13 @@ export function WeekLog() {
         dispatch({
             type: 'SET_VIEW',
             payload: {
-                mode: 'week',
                 date: format(newDate, 'yyyy-MM-dd')
             }
         });
     };
+
+    const toggleGrouping = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'groupByProject' } });
+    const toggleCompleted = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'showCompleted' } });
 
     // Filter bullets for the entire week
     const weekStartStr = format(startOfCurrentWeek, 'yyyy-MM-dd');
@@ -30,7 +33,7 @@ export function WeekLog() {
     const datesInRange = daysOfWeek.map(d => format(d, 'yyyy-MM-dd'));
 
     const weekBullets = Object.values(state.bullets).filter(b =>
-        !b.collectionId && datesInRange.includes(b.date)
+        (b.collectionId ? true : true) && datesInRange.includes(b.date)
     ).sort((a, b) => {
         // Sort by date then order
         if (a.date !== b.date) return a.date.localeCompare(b.date);
@@ -60,6 +63,32 @@ export function WeekLog() {
                 </div>
             </header>
 
+            <div className="view-controls" style={{
+                display: 'flex',
+                gap: '0.5rem',
+                marginBottom: '1rem',
+                justifyContent: 'flex-end'
+            }}>
+                <button
+                    onClick={toggleGrouping}
+                    className={`btn ${groupByProject ? 'btn-primary' : 'btn-ghost'}`}
+                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                    title={groupByProject ? "Ungroup" : "Group by Project"}
+                >
+                    {groupByProject ? <Grid size={16} /> : <Layers size={16} />}
+                    {groupByProject ? " Nested" : " Flat"}
+                </button>
+                <button
+                    onClick={toggleCompleted}
+                    className={`btn ${showCompleted ? 'btn-primary' : 'btn-ghost'}`}
+                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                    title={showCompleted ? "Hide Completed" : "Show Completed"}
+                >
+                    <CheckSquare size={16} />
+                    {showCompleted ? " Show Done" : " Hide Done"}
+                </button>
+            </div>
+
             <div style={{
                 border: '1px solid hsl(var(--color-text-secondary) / 0.2)',
                 borderRadius: 'var(--radius-md)',
@@ -70,17 +99,7 @@ export function WeekLog() {
                 flexDirection: 'column'
             }}>
                 <div style={{ flex: 1 }}>
-                    {weekBullets.length === 0 ? (
-                        <p style={{ fontStyle: 'italic', color: 'hsl(var(--color-text-secondary) / 0.5)', textAlign: 'center', padding: '2rem' }}>
-                            No tasks for this week.
-                        </p>
-                    ) : (
-                        weekBullets.map(bullet => (
-                            <div key={bullet.id} style={{ marginBottom: '0.5rem' }}>
-                                <BulletItem bullet={bullet} />
-                            </div>
-                        ))
-                    )}
+                    <TaskGroupList bullets={weekBullets} />
                 </div>
 
                 <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)' }}>

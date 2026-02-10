@@ -1,45 +1,55 @@
-import React from 'react';
 import { useStore } from '../store';
-import { BulletItem } from './BulletItem';
 import { BulletEditor } from './BulletEditor';
 import { addMonths, format, isSameMonth, parseISO } from 'date-fns';
-import { ChevronRight } from 'lucide-react';
+import { Grid, Layers, CheckSquare } from 'lucide-react';
+import { TaskGroupList } from './TaskGroupList';
 
 export function FutureLog() {
     const { state, dispatch } = useStore();
     const today = new Date();
 
-    // Generate next 6 months
-    const months = Array.from({ length: 6 }, (_, i) => addMonths(today, i));
+    // Generate next 12 months
+    const months = Array.from({ length: 12 }, (_, i) => addMonths(today, i));
 
     // Helper to get bullets for a specific month
     const getBulletsForMonth = (monthDate: Date) => {
         return Object.values(state.bullets).filter(b => {
-            if (b.collectionId) return false; // Don't show collection items
+            // if (b.collectionId) return false; // Don't show collection items - CHANGED: Show them if they have a date!
             if (b.state === 'migrated' || b.state === 'cancelled') return false; // Hide migrated/cancelled
             const bDate = parseISO(b.date);
             return isSameMonth(bDate, monthDate);
         });
     };
 
-    const jumpToMonth = (monthDate: Date) => {
-        // Set view to daily log of the 1st of that month? 
-        // Or maybe we want to keep it in Future Log view?
-        // Let's just switch to that date in Daily Log for now as a way to "zoom in".
-        dispatch({
-            type: 'SET_VIEW',
-            payload: {
-                mode: 'daily',
-                date: format(monthDate, 'yyyy-MM-dd')
-            }
-        });
-    };
+
 
     return (
         <div className="future-log">
-            <header style={{ marginBottom: '2rem' }}>
-                <h2 style={{ fontSize: '2rem', fontWeight: 300, color: 'hsl(var(--color-text-secondary))' }}>Future Log</h2>
-                <h1 style={{ fontSize: '3rem', fontWeight: 700 }}>Overview</h1>
+            <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <div>
+                    <h2 style={{ fontSize: '2rem', fontWeight: 300, color: 'hsl(var(--color-text-secondary))' }}>Future Log</h2>
+                    <h1 style={{ fontSize: '3rem', fontWeight: 700 }}>Overview</h1>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <button
+                        onClick={() => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'groupByProject' } })}
+                        className={`btn ${state.preferences.groupByProject ? 'btn-primary' : 'btn-ghost'}`}
+                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                        title={state.preferences.groupByProject ? "Ungroup" : "Group by Project"}
+                    >
+                        {state.preferences.groupByProject ? <Grid size={16} /> : <Layers size={16} />}
+                        {state.preferences.groupByProject ? " Nested" : " Flat"}
+                    </button>
+                    <button
+                        onClick={() => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'showCompleted' } })}
+                        className={`btn ${state.preferences.showCompleted ? 'btn-primary' : 'btn-ghost'}`}
+                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                        title={state.preferences.showCompleted ? "Hide Completed" : "Show Completed"}
+                    >
+                        <CheckSquare size={16} />
+                        {state.preferences.showCompleted ? " Show Done" : " Hide Done"}
+                    </button>
+                </div>
             </header>
 
             <div style={{
@@ -73,28 +83,15 @@ export function FutureLog() {
                             </div>
 
                             <div style={{ flex: 1, minHeight: '100px' }}>
-                                {monthBullets.length === 0 ? (
-                                    <p style={{ fontStyle: 'italic', color: 'hsl(var(--color-text-secondary) / 0.5)', fontSize: '0.9rem' }}>No tasks scheduled.</p>
-                                ) : (
-                                    monthBullets.map(b => (
-                                        <div key={b.id} style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-                                            <BulletItem bullet={b} />
-                                        </div>
-                                    ))
-                                )}
+                                <TaskGroupList bullets={monthBullets} />
+
 
                                 <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)' }}>
-                                    <BulletEditor defaultDate={format(month, 'yyyy-MM-01')} />
+                                    <BulletEditor defaultDate={format(month, 'yyyy-MM-01')} autoFocus={false} />
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => jumpToMonth(month)}
-                                className="btn btn-ghost"
-                                style={{ marginTop: '1rem', alignSelf: 'flex-start', fontSize: '0.8rem' }}
-                            >
-                                Go to month <ChevronRight size={14} />
-                            </button>
+
                         </div>
                     );
                 })}

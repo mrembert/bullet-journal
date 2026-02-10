@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { X, Save, Trash } from 'lucide-react';
+import { RichTextEditor } from './RichTextEditor';
+import { v4 as uuidv4 } from 'uuid';
 
 interface NoteEditorProps {
     bulletId: string;
@@ -11,20 +13,41 @@ interface NoteEditorProps {
 export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
     const { state, dispatch } = useStore();
     const bullet = state.bullets[bulletId];
-    const [content, setContent] = useState(bullet?.longFormContent || '');
-
-    useEffect(() => {
-        if (bullet) {
-            setContent(bullet.longFormContent || '');
+    // Clean saved content: strip orphaned embeddedTask nodes (deleted bullets)
+    const cleanContent = (raw: string): string => {
+        if (!raw) return '';
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.content) {
+                parsed.content = parsed.content.filter((node: any) => {
+                    if (node.type === 'embeddedTask' && node.attrs?.bulletId) {
+                        return !!state.bullets[node.attrs.bulletId];
+                    }
+                    return true;
+                });
+            }
+            return JSON.stringify(parsed);
+        } catch {
+            return raw;
         }
-    }, [bullet]);
+    };
+
+    // Use a REF for content — avoids stale closure issues entirely.
+    // The editor calls onChange on every keystroke, updating this ref.
+    // When we save, we always read the latest value from the ref.
+    const contentRef = useRef(cleanContent(bullet?.longFormContent || ''));
 
     if (!bullet) return null;
 
-    const handleSave = () => {
+    const handleContentChange = (json: string) => {
+        contentRef.current = json;
+    };
+
+    const handleClose = () => {
+        // Always save the latest content from the ref
         dispatch({
             type: 'UPDATE_BULLET',
-            payload: { id: bulletId, longFormContent: content }
+            payload: { id: bulletId, longFormContent: contentRef.current }
         });
         onClose();
     };
@@ -39,6 +62,22 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
         }
     };
 
+    const handleCreateTask = useCallback((initialContent?: string) => {
+        const newId = uuidv4();
+        dispatch({
+            type: 'ADD_BULLET',
+            payload: {
+                id: newId,
+                content: initialContent || '',
+                type: 'task',
+                date: bullet.date,
+                collectionId: bullet.collectionId,
+                parentNoteId: bulletId,
+            }
+        });
+        return newId;
+    }, [dispatch, bullet.date, bullet.collectionId, bulletId]);
+
     return createPortal(
         <div style={{
             position: 'fixed',
@@ -50,8 +89,8 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            zIndex: 9999, // Increased z-index
-        }} onClick={onClose}>
+            zIndex: 9999,
+        }} onClick={handleClose}>
             <div style={{
                 backgroundColor: 'hsl(var(--color-bg-primary))',
                 width: '80%',
@@ -80,33 +119,21 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
                         <button onClick={handleDelete} className="btn btn-ghost" style={{ color: 'hsl(var(--color-danger))' }} title="Delete Note">
                             <Trash size={18} />
                         </button>
-                        <button onClick={handleSave} className="btn btn-primary">
-                            <Save size={18} /> Save
+                        <button onClick={handleClose} className="btn btn-primary">
+                            <Save size={18} /> Save & Close
                         </button>
-                        <button onClick={onClose} className="btn btn-ghost">
+                        <button onClick={handleClose} className="btn btn-ghost">
                             <X size={18} />
                         </button>
                     </div>
                 </header>
-                <div style={{ flex: 1, padding: '1.5rem', overflow: 'auto' }}>
-                    <textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        onKeyDown={(e) => e.stopPropagation()}
-                        placeholder="Type your notes here..."
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            border: 'none',
-                            outline: 'none',
-                            resize: 'none',
-                            fontSize: '1rem',
-                            lineHeight: 1.6,
-                            fontFamily: 'inherit',
-                            backgroundColor: 'transparent',
-                            color: 'inherit'
-                        }}
-                        autoFocus
+                <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <RichTextEditor
+                        key={bulletId}
+                        content={contentRef.current}
+                        onChange={handleContentChange}
+                        onCreateTask={handleCreateTask}
+                        onSaveAndClose={handleClose}
                     />
                 </div>
             </div>

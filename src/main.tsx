@@ -1,13 +1,22 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { StoreProvider } from './store';
 import App from './App.tsx'
+import { StoreProvider } from './store.tsx'
+import { AuthProvider } from './contexts/AuthContext.tsx'
+import { ErrorBoundary } from './components/ErrorBoundary.tsx'
+import { NoteEditorProvider } from './contexts/NoteEditorContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <StoreProvider>
-      <App />
-    </StoreProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <StoreProvider>
+          <NoteEditorProvider>
+            <App />
+          </NoteEditorProvider>
+        </StoreProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

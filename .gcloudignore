@@ -1,0 +1,9 @@
+.git
+node_modules
+dist
+# Do NOT ignore .env.local - we need it for the build!
+# .env.local
+
+# Keep these available for the build
+!Dockerfile
+!nginx.conf

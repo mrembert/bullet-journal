@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Circle, X, Minus, ChevronRight, ArrowRight, Trash, FileText } from 'lucide-react';
+import { useState } from 'react';
+import { Circle, X, Minus, ChevronRight, ArrowRight, Trash, FileText, FolderInput } from 'lucide-react';
 import type { Bullet } from '../types';
 import { useStore } from '../store';
 import { MigrationPicker } from './MigrationPicker';
-import { NoteEditor } from './NoteEditor';
+import { ProjectPicker } from './ProjectPicker';
+import { useNoteEditor } from '../contexts/NoteEditorContext';
 
 interface BulletItemProps {
     bullet: Bullet;
@@ -12,8 +13,9 @@ interface BulletItemProps {
 export function BulletItem({ bullet }: BulletItemProps) {
     const { state, dispatch } = useStore();
     const [showMigration, setShowMigration] = useState(false);
+    const [showProjectPicker, setShowProjectPicker] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
-    const [showNoteEditor, setShowNoteEditor] = useState(false);
+    const { openNote } = useNoteEditor();
 
     const collection = bullet.collectionId ? state.collections[bullet.collectionId] : null;
     const showCollectionTag = collection && state.view.collectionId !== bullet.collectionId;
@@ -100,9 +102,29 @@ export function BulletItem({ bullet }: BulletItemProps) {
                             {collection?.title}
                         </span>
                     )}
+                    {bullet.parentNoteId && (
+                        <button
+                            onClick={() => openNote(bullet.parentNoteId || bullet.id)}
+                            className="btn btn-ghost"
+                            style={{
+                                padding: '0.1rem',
+                                height: 'auto',
+                                color: 'hsl(var(--color-accent))',
+                                opacity: 0.8,
+                                fontSize: '0.7rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '2px'
+                            }}
+                            title="View Parent Note"
+                        >
+                            <FileText size={12} />
+                            <span>From Note</span>
+                        </button>
+                    )}
                     {hasNote && (
                         <button
-                            onClick={() => setShowNoteEditor(true)}
+                            onClick={() => openNote(bullet.id)}
                             className="btn btn-ghost"
                             style={{
                                 padding: '0.1rem',
@@ -120,7 +142,7 @@ export function BulletItem({ bullet }: BulletItemProps) {
                 {/* Actions that appear on hover */}
                 {isHovered && !hasNote && (
                     <button
-                        onClick={() => setShowNoteEditor(true)}
+                        onClick={() => openNote(bullet.id)}
                         className="btn btn-ghost"
                         style={{
                             padding: '0.25rem',
@@ -135,8 +157,27 @@ export function BulletItem({ bullet }: BulletItemProps) {
                 )}
 
                 {/* Migration Action - Only for open tasks */}
-                {bullet.type === 'task' && !isCompleted && !isMigrated && (isHovered || showMigration) && (
+                {bullet.type === 'task' && !isCompleted && !isMigrated && (isHovered || showMigration || showProjectPicker) && (
                     <div style={{ position: 'relative', display: 'flex', gap: '0.25rem' }}>
+                        <button
+                            onClick={() => setShowProjectPicker(!showProjectPicker)}
+                            className="btn btn-ghost"
+                            style={{ padding: '0.25rem', height: 'auto', color: 'hsl(var(--color-text-secondary))' }}
+                            title="Move to Project"
+                        >
+                            <FolderInput size={16} />
+                        </button>
+                        {showProjectPicker && (
+                            <ProjectPicker
+                                currentCollectionId={bullet.collectionId}
+                                onSelectProject={(collectionId) => {
+                                    dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, collectionId: collectionId || undefined } });
+                                    setShowProjectPicker(false);
+                                }}
+                                onCancel={() => setShowProjectPicker(false)}
+                            />
+                        )}
+
                         <button
                             onClick={() => setShowMigration(!showMigration)}
                             className="btn btn-ghost"
@@ -181,10 +222,6 @@ export function BulletItem({ bullet }: BulletItemProps) {
                     </button>
                 )}
             </div>
-
-            {showNoteEditor && (
-                <NoteEditor bulletId={bullet.id} onClose={() => setShowNoteEditor(false)} />
-            )}
         </>
     );
 }

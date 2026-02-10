@@ -1,20 +1,27 @@
-import { BookOpen, Calendar, Star, List, ChevronLeft, ChevronRight, Plus, Columns, Search, Download, Upload, Moon, Sun, Archive } from 'lucide-react';
+import { BookOpen, Calendar, Star, List, ChevronLeft, ChevronRight, Plus, Columns, Search, Download, Upload, Moon, Sun, Archive, HelpCircle, MessageSquare } from 'lucide-react';
 import { DailyLog } from './components/DailyLog';
 import { FutureLog } from './components/FutureLog';
 import { CollectionView } from './components/CollectionView';
 import { WeekLog } from './components/WeekLog';
 import { SearchView } from './components/SearchView';
 import { BacklogView } from './components/BacklogView';
+import { HelpPage } from './components/HelpPage';
 import { useStore } from './store';
 import { format, parseISO, addDays } from 'date-fns';
 import { useState, type FormEvent, useRef, useEffect } from 'react';
+import { useAuth } from './contexts/AuthContext';
+import { useNoteEditor } from './contexts/NoteEditorContext';
+import { Login, Unauthorized } from './components/Login';
+import { NoteEditor } from './components/NoteEditor';
 import './App.css';
 
 function App() {
+  const { user, loading, isAuthorized } = useAuth();
   const { state, dispatch } = useStore();
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
   const [newCollectionTitle, setNewCollectionTitle] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { openNoteId, closeNote } = useNoteEditor();
 
   // Theme State
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -38,10 +45,27 @@ function App() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
+  if (loading) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'hsl(var(--color-bg-secondary))' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid hsl(var(--color-text-secondary))', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
+
+  if (!isAuthorized) {
+    return <Unauthorized />;
+  }
+
   // Parse the current view date
   const currentDate = parseISO(state.view.date);
 
-  const setView = (mode: 'daily' | 'future' | 'collection' | 'week' | 'search' | 'backlog', date?: string, collectionId?: string) => {
+  const setView = (mode: 'daily' | 'future' | 'collection' | 'week' | 'search' | 'backlog' | 'help', date?: string, collectionId?: string) => {
     dispatch({ type: 'SET_VIEW', payload: { mode, date: date || state.view.date, collectionId } });
   };
 
@@ -122,7 +146,7 @@ function App() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <BookOpen size={20} /> Journal
+            <BookOpen size={20} /> Last Task
           </h1>
           <button onClick={toggleTheme} className="btn btn-ghost" title="Toggle Theme" style={{ padding: '0.25rem' }}>
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -205,6 +229,25 @@ function App() {
               ))}
             </div>
           </div>
+
+          <div style={{ marginTop: '2rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)', paddingTop: '1rem' }}>
+            <button
+              onClick={() => setView('help')}
+              className={`btn ${state.view.mode === 'help' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.9rem' }}
+            >
+              <HelpCircle size={18} /> Help & Method
+            </button>
+            <a
+              href="https://github.com/mrembert/bullet-journal/issues"
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-ghost"
+              style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.9rem', textDecoration: 'none', color: 'inherit' }}
+            >
+              <MessageSquare size={18} /> Feedback / Bug
+            </a>
+          </div>
         </nav>
 
         <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)' }}>
@@ -253,7 +296,18 @@ function App() {
         {isSearch && <SearchView />}
 
         {isBacklog && <BacklogView />}
+
+        {state.view.mode === 'help' && <HelpPage />}
       </main>
+
+      {/* Global Note Editor - rendered at App level so it survives list re-renders */}
+      {openNoteId && (
+        <NoteEditor
+          key={openNoteId}
+          bulletId={openNoteId}
+          onClose={closeNote}
+        />
+      )}
     </div>
   );
 }
