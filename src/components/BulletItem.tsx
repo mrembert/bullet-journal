@@ -119,7 +119,7 @@ export function BulletItem({ bullet }: BulletItemProps) {
                             gap: '0.2rem'
                         }}>
                             <Calendar size={10} />
-                            {format(parseISO(bullet.date), 'MMM d')}
+                            {format(parseISO(bullet.date!), 'MMM d')}
                         </span>
                     )}
                     {bullet.parentNoteId && (
@@ -191,7 +191,7 @@ export function BulletItem({ bullet }: BulletItemProps) {
                         </button>
                         {showProjectPicker && (
                             <ProjectPicker
-                                currentCollectionId={bullet.collectionId}
+                                currentCollectionId={bullet.collectionId || undefined}
                                 onSelectProject={(collectionId) => {
                                     dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, collectionId: collectionId || undefined } });
                                     setShowProjectPicker(false);

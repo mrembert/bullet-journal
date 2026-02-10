@@ -28,7 +28,7 @@ export function BacklogView() {
             if (!a.date && b.date) return -1;
             if (a.date && !b.date) return 1;
             if (!a.date && !b.date) return (a.order || 0) - (b.order || 0);
-            return b.date!.localeCompare(a.date!); // Descending date
+            return (b.date || '').localeCompare(a.date || ''); // Descending date
         });
 
     const undatedTasks = openTasks.filter(b => !b.date);

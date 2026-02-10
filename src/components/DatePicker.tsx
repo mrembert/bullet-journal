@@ -3,7 +3,7 @@ import { addDays, addMonths, startOfMonth, format } from 'date-fns';
 import { ArrowRight, X, Calendar, Trash2 } from 'lucide-react';
 
 interface DatePickerProps {
-    currentDate?: string | null;
+    currentDate?: string | null | undefined;
     onSelectDate: (date: string | null) => void;
     onCancel: () => void;
 }

@@ -76,7 +76,7 @@ export function SearchView() {
                             marginBottom: '0.5rem',
                             fontWeight: 600
                         }}>
-                            {format(parseISO(bullet.date), 'MMMM d, yyyy')}
+                            {bullet.date ? format(parseISO(bullet.date), 'MMMM d, yyyy') : 'Undated'}
                         </div>
                         <BulletItem bullet={bullet} />
                     </div>
