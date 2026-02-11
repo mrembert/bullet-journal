@@ -49,8 +49,7 @@ export function BulletEditor({ defaultDate, autoFocus = false }: { defaultDate?:
                 }
             });
             setContent('');
-            // Keep the selected collection sticky? Or reset?
-            // Let's keep it sticky for rapid entry.
+            setSelectedCollectionId('');
         }
     };
 
