@@ -29,7 +29,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isAuthorized, setIsAuthorized] = useState(false);
 
     useEffect(() => {
-        const useMockAuth = import.meta.env.VITE_USE_MOCK_AUTH === 'true';
+        // Only allow mock auth in development mode to prevent production bypass
+        const useMockAuth = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_AUTH === 'true';
 
         if (useMockAuth) {
             console.log("AuthProvider: Mock Auth Enabled");
