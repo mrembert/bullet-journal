@@ -14,8 +14,9 @@ export function BulletEditor({ defaultDate, autoFocus = true }: { defaultDate?: 
 
     const effectiveCollectionId = state.view.collectionId || selectedCollectionId;
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' && content.trim()) {
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (content.trim()) {
             let type: BulletType = 'task';
             let cleanContent = content;
             const targetDate = defaultDate || state.view.date;
@@ -50,15 +51,19 @@ export function BulletEditor({ defaultDate, autoFocus = true }: { defaultDate?: 
     const projects = Object.values(state.collections).filter(c => c.type === 'project');
 
     return (
-        <div className="bullet-editor-row" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+        <form
+            className="bullet-editor-row"
+            onSubmit={handleSubmit}
+            style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}
+        >
             <input
                 type="text"
                 className="input"
                 placeholder="Add a task (•), event (o), or note (-)..."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                onKeyDown={handleKeyDown}
                 autoFocus={autoFocus}
+                enterKeyHint="enter"
                 style={{ flex: 1 }}
             />
 
@@ -82,6 +87,9 @@ export function BulletEditor({ defaultDate, autoFocus = true }: { defaultDate?: 
                     ))}
                 </select>
             )}
-        </div>
+            {/* Optional: Add a hidden submit button for some older browsers if needed, 
+                but enterKeyHint + form should handle it. */}
+            <button type="submit" style={{ display: 'none' }} aria-hidden="true" />
+        </form>
     );
 }
