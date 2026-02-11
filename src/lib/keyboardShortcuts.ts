@@ -8,6 +8,7 @@ export interface KeyboardShortcutContext {
         moveUp: () => void;
         moveDown: () => void;
         clearFocus: () => void;
+        setEditingId: (id: string | null) => void;
         dispatch: (action: Action) => void;
         openNote: (id: string) => void;
         onMigratePrompt: (id: string) => void;
@@ -32,7 +33,7 @@ export function handleKeyboardShortcut(
     context: KeyboardShortcutContext
 ) {
     const { state, focusedId, isInput, actions } = context;
-    const { moveUp, moveDown, clearFocus, dispatch, openNote, onMigratePrompt, requestConfirmation } = actions;
+    const { moveUp, moveDown, clearFocus, setEditingId, dispatch, openNote, onMigratePrompt, requestConfirmation } = actions;
 
     if (e.key === 'Escape') {
         e.preventDefault();
@@ -62,6 +63,11 @@ export function handleKeyboardShortcut(
     if (!bullet) return;
 
     switch (key) {
+        case 'e': {
+            e.preventDefault();
+            setEditingId(bullet.id);
+            break;
+        }
         case 'x': {
             e.preventDefault();
             const newState = bullet.state === 'completed' ? 'open' : 'completed';

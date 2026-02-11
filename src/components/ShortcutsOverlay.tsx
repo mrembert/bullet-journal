@@ -9,6 +9,7 @@ export function ShortcutsOverlay({ onClose }: ShortcutsOverlayProps) {
     const shortcuts = [
         { key: 'j / ↓', desc: 'Focus next item' },
         { key: 'k / ↑', desc: 'Focus previous item' },
+        { key: 'e', desc: 'Edit text of focused item' },
         { key: 'x', desc: 'Toggle done on focused item' },
         { key: 'n', desc: 'Open note for focused item' },
         { key: 'm', desc: 'Migrate focused item' },
