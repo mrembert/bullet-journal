@@ -300,7 +300,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                 </button>
                                 {showDatePicker && (
                                     <DatePicker
-                                        currentDate={bullet.date || undefined}
+                                        currentDate={(bullet.date || undefined) as string | undefined}
                                         onSelectDate={(date) => {
                                             handleDateSelect(date);
                                             setMenuOpen(false);
