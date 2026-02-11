@@ -231,7 +231,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (!user) return; // Wait for auth
 
-        console.log("Store: Subscribing to user data for", user.uid);
+        console.log("Store: Subscribing to user data");
         const unsubscribe = subscribeToUserData(user.uid, (data) => {
             rawDispatch({ type: 'LOAD_DATA', payload: data });
         });

@@ -78,11 +78,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }, 5000);
 
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            console.log("AuthProvider: Auth state changed", currentUser?.email);
+            console.log("AuthProvider: Auth state changed");
             if (currentUser) {
                 try {
                     const emailRef = doc(db, 'allowed_users', currentUser.email!);
-                    console.log("AuthProvider: Checking authorization for path:", emailRef.path);
+                    console.log("AuthProvider: Checking authorization");
                     const emailDoc = await getDoc(emailRef);
 
                     if (mounted) {
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             console.log("AuthProvider: User is authorized");
                             setIsAuthorized(true);
                         } else {
-                            console.warn("AuthProvider: User not in allowed_users list:", currentUser.email);
+                            console.warn("AuthProvider: User not in allowed_users list");
                             setIsAuthorized(false);
                         }
                     }
