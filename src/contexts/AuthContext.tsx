@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (currentUser) {
                 try {
                     const emailRef = doc(db, 'allowed_users', currentUser.email!);
-                    console.log("AuthProvider: Checking authorization");
+                    console.log("AuthProvider: Checking authorization...");
                     const emailDoc = await getDoc(emailRef);
 
                     if (mounted) {
