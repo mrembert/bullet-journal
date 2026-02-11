@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { SortableBulletItem } from './SortableBulletItem';
 import { BulletEditor } from './BulletEditor';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Grid, Layers } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -24,6 +24,7 @@ import { useEffect } from 'react';
 export function CollectionView() {
     const { state, dispatch } = useStore();
     const { collectionId } = state.view;
+    const { sortByType } = state.preferences;
     const { focusedId, setVisibleIds } = useKeyboardFocus();
     const [showCompleted, setShowCompleted] = useState(false);
 
@@ -35,7 +36,14 @@ export function CollectionView() {
     const bullets = Object.values(state.bullets)
         .filter((b) => b.collectionId === collectionId)
         .filter((b) => showCompleted || b.state !== 'completed')
-        .sort((a, b) => (a.order || 0) - (b.order || 0));
+        .sort((a, b) => {
+            if (sortByType) {
+                const typeOrder = { event: 0, task: 1, note: 2 };
+                const typeDiff = (typeOrder[a.type] || 0) - (typeOrder[b.type] || 0);
+                if (typeDiff !== 0) return typeDiff;
+            }
+            return (a.order || 0) - (b.order || 0);
+        });
 
     // Register visible IDs for keyboard navigation
     useEffect(() => {
@@ -84,6 +92,14 @@ export function CollectionView() {
                             {collection.title}
                         </h1>
                     </div>
+                    <button
+                        onClick={() => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'sortByType' } })}
+                        className={`btn ${sortByType ? 'btn-primary' : 'btn-ghost'}`}
+                        style={{ color: 'hsl(var(--color-text-secondary))', marginRight: '0.5rem' }}
+                        title={sortByType ? "Sorted by Type" : "Sort by Custom Order"}
+                    >
+                        {sortByType ? <Layers size={20} /> : <Grid size={20} />}
+                    </button>
                     <button
                         onClick={() => setShowCompleted(!showCompleted)}
                         className="btn btn-ghost"

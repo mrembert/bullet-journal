@@ -21,7 +21,9 @@ export interface Collection {
     title: string;
     type: 'project' | 'list' | 'future_log';
     createdAt: number;
+    updatedAt?: number;
     archived?: boolean;
+    order?: number; // Added for project reordering
 }
 
 export type ViewMode = 'daily' | 'week' | 'future' | 'collection' | 'search' | 'backlog' | 'help';
@@ -38,6 +40,7 @@ export interface AppState {
         groupByProject: boolean;
         showCompleted: boolean;
         showMigrated: boolean; // Optional: might want to toggle moved items too
+        sortByType: boolean; // Added for sorting items by type
     };
 }
 
@@ -51,5 +54,6 @@ export type Action =
     | { type: 'DELETE_COLLECTION'; payload: { id: string } }
     | { type: 'MIGRATE_BULLET'; payload: { id: string; targetDate: string; newId?: string } }
     | { type: 'REORDER_BULLETS'; payload: { items: { id: string, order: number }[] } }
+    | { type: 'REORDER_COLLECTIONS'; payload: { items: { id: string, order: number }[] } } // Added action
     | { type: 'TOGGLE_PREFERENCE'; payload: { key: keyof AppState['preferences'] } }
     | { type: 'LOAD_DATA'; payload: Partial<AppState> }; // Partial loading for sync

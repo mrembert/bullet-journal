@@ -8,7 +8,7 @@ import { useEffect, useMemo } from 'react';
 
 export function WeekLog() {
     const { state, dispatch } = useStore();
-    const { groupByProject, showCompleted } = state.preferences;
+    const { groupByProject, showCompleted, sortByType } = state.preferences;
 
     // Use state.view.date as the anchor for the week
     const currentDate = parseISO(state.view.date);
@@ -28,6 +28,7 @@ export function WeekLog() {
 
     const toggleGrouping = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'groupByProject' } });
     const toggleCompleted = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'showCompleted' } });
+    const toggleSortType = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'sortByType' } });
 
     // Filter bullets for the entire week
     const weekStartStr = format(startOfCurrentWeek, 'yyyy-MM-dd');
@@ -42,8 +43,15 @@ export function WeekLog() {
         const dateA = a.date || '';
         const dateB = b.date || '';
         if (dateA !== dateB) return dateA.localeCompare(dateB);
+
+        if (sortByType) {
+            const typeOrder = { event: 0, task: 1, note: 2 };
+            const typeDiff = (typeOrder[a.type] || 0) - (typeOrder[b.type] || 0);
+            if (typeDiff !== 0) return typeDiff;
+        }
+
         return (a.order || 0) - (b.order || 0);
-    }), [state.bullets, datesInRange.join(',')]); // join dates to avoid array ref dependency issues
+    }), [state.bullets, datesInRange.join(','), sortByType]); // join dates to avoid array ref dependency issues
 
     const defaultEditorDate = isSameDay(currentDate, new Date()) || datesInRange.includes(format(new Date(), 'yyyy-MM-dd'))
         ? format(new Date(), 'yyyy-MM-dd')
@@ -100,6 +108,15 @@ export function WeekLog() {
                 >
                     <CheckSquare size={16} />
                     {showCompleted ? " Show Done" : " Hide Done"}
+                </button>
+                <button
+                    onClick={toggleSortType}
+                    className={`btn ${sortByType ? 'btn-primary' : 'btn-ghost'}`}
+                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                    title={sortByType ? "Sorted by Type" : "Sort by Custom Order"}
+                >
+                    {sortByType ? <Layers size={16} /> : <Grid size={16} />}
+                    {sortByType ? " By Type" : " Custom"}
                 </button>
             </div>
 

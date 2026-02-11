@@ -19,6 +19,18 @@ export function FutureLog() {
             if (!b.date) return false; // Undated items don't belong in Future Log
             const bDate = parseISO(b.date);
             return isSameMonth(bDate, monthDate);
+        }).sort((a, b) => {
+            const dateA = a.date || '';
+            const dateB = b.date || '';
+            if (dateA !== dateB) return dateA.localeCompare(dateB);
+
+            if (state.preferences.sortByType) {
+                const typeOrder = { event: 0, task: 1, note: 2 };
+                const typeDiff = (typeOrder[a.type] || 0) - (typeOrder[b.type] || 0);
+                if (typeDiff !== 0) return typeDiff;
+            }
+
+            return (a.order || 0) - (b.order || 0);
         });
     };
 
@@ -49,6 +61,15 @@ export function FutureLog() {
                     >
                         <CheckSquare size={16} />
                         {state.preferences.showCompleted ? " Show Done" : " Hide Done"}
+                    </button>
+                    <button
+                        onClick={() => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'sortByType' } })}
+                        className={`btn ${state.preferences.sortByType ? 'btn-primary' : 'btn-ghost'}`}
+                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                        title={state.preferences.sortByType ? "Sorted by Type" : "Sort by Custom Order"}
+                    >
+                        {state.preferences.sortByType ? <Layers size={16} /> : <Grid size={16} />}
+                        {state.preferences.sortByType ? " By Type" : " Custom"}
                     </button>
                 </div>
             </header>

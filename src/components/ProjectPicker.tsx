@@ -16,7 +16,12 @@ export function ProjectPicker({ onSelectProject, onCancel, currentCollectionId }
     // Get all projects
     const projects = Object.values(state.collections)
         .filter(c => c.type === 'project')
-        .sort((a, b) => b.createdAt - a.createdAt);
+        .sort((a, b) => {
+            if (a.order !== undefined && b.order !== undefined) {
+                return a.order - b.order;
+            }
+            return b.createdAt - a.createdAt;
+        });
 
     // Focus management
     const { containerRef, handleKeyDown } = usePopupNavigation({

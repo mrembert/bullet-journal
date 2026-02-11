@@ -14,6 +14,7 @@ export const initialState: AppState = {
         groupByProject: false,
         showCompleted: true,
         showMigrated: false,
+        sortByType: false,
     },
 };
 
@@ -72,6 +73,15 @@ export function reducer(state: AppState, action: Action): AppState {
                 }
             });
             return { ...state, bullets: newBullets };
+        }
+        case 'REORDER_COLLECTIONS': {
+            const newCollections = { ...state.collections };
+            action.payload.items.forEach(({ id, order }) => {
+                if (newCollections[id]) {
+                    newCollections[id] = { ...newCollections[id], order };
+                }
+            });
+            return { ...state, collections: newCollections };
         }
         case 'DELETE_BULLET': {
             const { [action.payload.id]: deleted, ...remainingBullets } = state.bullets;
@@ -139,6 +149,7 @@ export function reducer(state: AppState, action: Action): AppState {
                         title: data.title,
                         type: data.type,
                         createdAt: now,
+                        order: now, // Initialize order
                     },
                 },
             };

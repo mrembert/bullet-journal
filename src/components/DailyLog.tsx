@@ -10,12 +10,20 @@ import { useEffect, useMemo } from 'react';
 export function DailyLog() {
     const { state, dispatch } = useStore();
     const { date } = state.view;
-    const { groupByProject, showCompleted } = state.preferences;
+    const { groupByProject, showCompleted, sortByType } = state.preferences;
 
     // Filter bullets for the current date
     const dailyBullets = useMemo(() => Object.values(state.bullets)
         .filter((b) => b.date === date) // Includes project tasks if they have this date
-        .sort((a, b) => (a.order || 0) - (b.order || 0)), [state.bullets, date]);
+        .sort((a, b) => {
+            if (sortByType) {
+                // Event > Task > Note
+                const typeOrder = { event: 0, task: 1, note: 2 };
+                const typeDiff = (typeOrder[a.type] || 0) - (typeOrder[b.type] || 0);
+                if (typeDiff !== 0) return typeDiff;
+            }
+            return (a.order || 0) - (b.order || 0);
+        }), [state.bullets, date, sortByType]);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -48,6 +56,7 @@ export function DailyLog() {
 
     const toggleGrouping = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'groupByProject' } });
     const toggleCompleted = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'showCompleted' } });
+    const toggleSortType = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'sortByType' } });
 
     const { setFocusedId } = useKeyboardFocus();
 
@@ -83,6 +92,15 @@ export function DailyLog() {
                 >
                     <CheckSquare size={16} />
                     {showCompleted ? " Show Done" : " Hide Done"}
+                </button>
+                <button
+                    onClick={toggleSortType}
+                    className={`btn ${sortByType ? 'btn-primary' : 'btn-ghost'}`}
+                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                    title={sortByType ? "Sorted by Type" : "Sort by Custom Order"}
+                >
+                    {sortByType ? <Layers size={16} /> : <Grid size={16} />}
+                    {sortByType ? " By Type" : " Custom"}
                 </button>
             </div>
 
