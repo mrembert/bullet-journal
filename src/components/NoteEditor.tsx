@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { X, Save, Trash } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
+import { cleanNoteContent } from '../lib/noteUtils.ts';
 import { v4 as uuidv4 } from 'uuid';
 
 interface NoteEditorProps {
@@ -13,29 +14,11 @@ interface NoteEditorProps {
 export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
     const { state, dispatch } = useStore();
     const bullet = state.bullets[bulletId];
-    // Clean saved content: strip orphaned embeddedTask nodes (deleted bullets)
-    const cleanContent = (raw: string): string => {
-        if (!raw) return '';
-        try {
-            const parsed = JSON.parse(raw);
-            if (parsed && parsed.content) {
-                parsed.content = parsed.content.filter((node: any) => {
-                    if (node.type === 'embeddedTask' && node.attrs?.bulletId) {
-                        return !!state.bullets[node.attrs.bulletId];
-                    }
-                    return true;
-                });
-            }
-            return JSON.stringify(parsed);
-        } catch {
-            return raw;
-        }
-    };
 
     // Use a REF for content — avoids stale closure issues entirely.
     // The editor calls onChange on every keystroke, updating this ref.
     // When we save, we always read the latest value from the ref.
-    const contentRef = useRef(cleanContent(bullet?.longFormContent || ''));
+    const contentRef = useRef(cleanNoteContent(bullet?.longFormContent || '', state.bullets));
 
     if (!bullet) return null;
 
