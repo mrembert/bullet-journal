@@ -7,19 +7,21 @@ import { handleKeyboardShortcut } from '../lib/keyboardShortcuts';
 
 export function useKeyboardShortcuts(onMigratePrompt: (bulletId: string) => void) {
     const { state, dispatch } = useStore();
-    const { focusedId, moveUp, moveDown, clearFocus } = useKeyboardFocus();
+    const { focusedId, moveUp, moveDown, clearFocus, setEditingId } = useKeyboardFocus();
     const { openNote } = useNoteEditor();
     const { requestConfirmation } = useConfirmation();
 
     // Use Refs to ensure the listener always has the latest state without re-binding constantly
     const stateRef = useRef(state);
     const focusedIdRef = useRef(focusedId);
+    const setEditingIdRef = useRef(setEditingId);
     const openNoteRef = useRef(openNote);
     const requestConfirmationRef = useRef(requestConfirmation);
     const onMigratePromptRef = useRef(onMigratePrompt);
 
     useEffect(() => { stateRef.current = state; }, [state]);
     useEffect(() => { focusedIdRef.current = focusedId; }, [focusedId]);
+    useEffect(() => { setEditingIdRef.current = setEditingId; }, [setEditingId]);
     useEffect(() => { openNoteRef.current = openNote; }, [openNote]);
     useEffect(() => { requestConfirmationRef.current = requestConfirmation; }, [requestConfirmation]);
     useEffect(() => { onMigratePromptRef.current = onMigratePrompt; }, [onMigratePrompt]);
@@ -37,6 +39,7 @@ export function useKeyboardShortcuts(onMigratePrompt: (bulletId: string) => void
                     moveUp,
                     moveDown,
                     clearFocus,
+                    setEditingId: (id) => setEditingIdRef.current(id),
                     dispatch,
                     openNote: (id) => openNoteRef.current(id),
                     onMigratePrompt: (id) => onMigratePromptRef.current(id),
