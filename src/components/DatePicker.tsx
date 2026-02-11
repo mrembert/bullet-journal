@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { addDays, addMonths, startOfMonth, format } from 'date-fns';
 import { ArrowRight, X, Calendar, Trash2 } from 'lucide-react';
+import { usePopupNavigation } from '../hooks/usePopupNavigation';
 
 interface DatePickerProps {
     currentDate?: string | null | undefined;
@@ -22,6 +23,12 @@ export function DatePicker({ currentDate, onSelectDate, onCancel }: DatePickerPr
         { label: 'Next Month', date: format(nextMonth, 'yyyy-MM-dd') },
     ];
 
+    // Focus management
+    const { containerRef, handleKeyDown } = usePopupNavigation({
+        selector: 'button.date-option',
+        onClose: onCancel
+    });
+
     const panelContent = isCustom ? (
         <div className="picker-panel">
             <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -37,10 +44,15 @@ export function DatePicker({ currentDate, onSelectDate, onCancel }: DatePickerPr
                     if (e.target.value) onSelectDate(e.target.value);
                 }}
                 autoFocus
+                onKeyDown={(e) => e.stopPropagation()}
             />
         </div>
     ) : (
-        <div className="picker-panel">
+        <div
+            className="picker-panel"
+            ref={containerRef}
+            onKeyDown={handleKeyDown}
+        >
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -64,7 +76,7 @@ export function DatePicker({ currentDate, onSelectDate, onCancel }: DatePickerPr
                 <button
                     key={opt.date}
                     onClick={() => onSelectDate(opt.date)}
-                    className="btn btn-ghost"
+                    className="btn btn-ghost date-option"
                     style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.9rem' }}
                 >
                     <Calendar size={14} /> {opt.label}
@@ -73,7 +85,7 @@ export function DatePicker({ currentDate, onSelectDate, onCancel }: DatePickerPr
 
             <button
                 onClick={() => setIsCustom(true)}
-                className="btn btn-ghost"
+                className="btn btn-ghost date-option"
                 style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.9rem' }}
             >
                 <ArrowRight size={14} /> Custom Date...
@@ -82,7 +94,7 @@ export function DatePicker({ currentDate, onSelectDate, onCancel }: DatePickerPr
             {currentDate && (
                 <button
                     onClick={() => onSelectDate(null)}
-                    className="btn btn-ghost"
+                    className="btn btn-ghost date-option"
                     style={{
                         width: '100%',
                         justifyContent: 'flex-start',

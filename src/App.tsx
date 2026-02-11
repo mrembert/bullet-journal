@@ -18,6 +18,7 @@ import { useConfirmation } from './contexts/ConfirmationContext';
 import { KeyboardFocusProvider } from './contexts/KeyboardFocusContext';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { MigrationPicker } from './components/MigrationPicker';
+import { ProjectPicker } from './components/ProjectPicker';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { Keyboard } from 'lucide-react';
 import './App.css';
@@ -30,6 +31,7 @@ function App() {
   const [showArchived, setShowArchived] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [migratingBulletId, setMigratingBulletId] = useState<string | null>(null);
+  const [movingBulletId, setMovingBulletId] = useState<string | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   const closeSidebar = () => setSidebarOpen(false);
@@ -38,7 +40,10 @@ function App() {
   const { requestConfirmation } = useConfirmation();
 
   // Keyboard Shortcuts
-  useKeyboardShortcuts(setMigratingBulletId);
+  useKeyboardShortcuts({
+    onMigratePrompt: setMigratingBulletId,
+    onMoveToProject: setMovingBulletId
+  });
 
   // Theme State
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -444,6 +449,17 @@ function App() {
             />
           </div>
         </div>
+      )}
+
+      {movingBulletId && (
+        <ProjectPicker
+          currentCollectionId={state.bullets[movingBulletId]?.collectionId || undefined}
+          onSelectProject={(collectionId) => {
+            dispatch({ type: 'UPDATE_BULLET', payload: { id: movingBulletId, collectionId: collectionId || undefined } });
+            setMovingBulletId(null);
+          }}
+          onCancel={() => setMovingBulletId(null)}
+        />
       )}
 
       {showShortcuts && (

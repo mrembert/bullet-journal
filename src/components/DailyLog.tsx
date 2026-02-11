@@ -4,6 +4,8 @@ import { type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { TaskGroupList } from './TaskGroupList';
 import { CheckSquare, Grid, Layers } from 'lucide-react';
+import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
+import { useEffect, useMemo } from 'react';
 
 export function DailyLog() {
     const { state, dispatch } = useStore();
@@ -11,9 +13,9 @@ export function DailyLog() {
     const { groupByProject, showCompleted } = state.preferences;
 
     // Filter bullets for the current date
-    const dailyBullets = Object.values(state.bullets)
+    const dailyBullets = useMemo(() => Object.values(state.bullets)
         .filter((b) => b.date === date) // Includes project tasks if they have this date
-        .sort((a, b) => (a.order || 0) - (b.order || 0));
+        .sort((a, b) => (a.order || 0) - (b.order || 0)), [state.bullets, date]);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -46,6 +48,15 @@ export function DailyLog() {
 
     const toggleGrouping = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'groupByProject' } });
     const toggleCompleted = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'showCompleted' } });
+
+    const { setFocusedId } = useKeyboardFocus();
+
+    useEffect(() => {
+        // Focus the first task on mount if available
+        if (dailyBullets.length > 0) {
+            setFocusedId(dailyBullets[0].id);
+        }
+    }, [date]); // Re-run when date changes
 
     return (
         <div className="daily-log">

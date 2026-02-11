@@ -5,7 +5,13 @@ import { useNoteEditor } from '../contexts/NoteEditorContext';
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import { handleKeyboardShortcut } from '../lib/keyboardShortcuts';
 
-export function useKeyboardShortcuts(onMigratePrompt: (bulletId: string) => void) {
+export function useKeyboardShortcuts({
+    onMigratePrompt,
+    onMoveToProject
+}: {
+    onMigratePrompt: (bulletId: string) => void;
+    onMoveToProject: (bulletId: string) => void;
+}) {
     const { state, dispatch } = useStore();
     const { focusedId, moveUp, moveDown, clearFocus, setEditingId } = useKeyboardFocus();
     const { openNote } = useNoteEditor();
@@ -18,6 +24,7 @@ export function useKeyboardShortcuts(onMigratePrompt: (bulletId: string) => void
     const openNoteRef = useRef(openNote);
     const requestConfirmationRef = useRef(requestConfirmation);
     const onMigratePromptRef = useRef(onMigratePrompt);
+    const onMoveToProjectRef = useRef(onMoveToProject);
 
     useEffect(() => { stateRef.current = state; }, [state]);
     useEffect(() => { focusedIdRef.current = focusedId; }, [focusedId]);
@@ -25,6 +32,7 @@ export function useKeyboardShortcuts(onMigratePrompt: (bulletId: string) => void
     useEffect(() => { openNoteRef.current = openNote; }, [openNote]);
     useEffect(() => { requestConfirmationRef.current = requestConfirmation; }, [requestConfirmation]);
     useEffect(() => { onMigratePromptRef.current = onMigratePrompt; }, [onMigratePrompt]);
+    useEffect(() => { onMoveToProjectRef.current = onMoveToProject; }, [onMoveToProject]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -43,6 +51,7 @@ export function useKeyboardShortcuts(onMigratePrompt: (bulletId: string) => void
                     dispatch,
                     openNote: (id) => openNoteRef.current(id),
                     onMigratePrompt: (id) => onMigratePromptRef.current(id),
+                    onMoveToProject: (id) => onMoveToProjectRef.current(id),
                     requestConfirmation: (opts) => requestConfirmationRef.current(opts),
                 }
             });

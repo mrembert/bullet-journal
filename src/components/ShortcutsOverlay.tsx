@@ -13,11 +13,13 @@ export function ShortcutsOverlay({ onClose }: ShortcutsOverlayProps) {
         { key: 'x', desc: 'Toggle done on focused item' },
         { key: 'n', desc: 'Open note for focused item' },
         { key: 'm', desc: 'Migrate focused item' },
+        { key: 'p', desc: 'Move focused item to project' },
         { key: 'd', desc: 'Delete focused item' },
         { key: 'Escape', desc: 'Clear focus / Close menu' },
         { key: 'Enter', desc: 'Add item from input field' },
         { key: 'Ctrl + .', desc: 'Insert task while writing note' },
         { key: 'Ctrl + Enter', desc: 'Save and close note editor' },
+        { key: 'Alt + P', desc: 'Select project for new task' },
     ];
 
     return (

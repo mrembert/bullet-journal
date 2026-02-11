@@ -3,6 +3,8 @@ import { BulletEditor } from './BulletEditor';
 import { format, startOfWeek, addDays, isSameDay, parseISO, endOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight, Grid, Layers, CheckSquare } from 'lucide-react';
 import { TaskGroupList } from './TaskGroupList';
+import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
+import { useEffect, useMemo } from 'react';
 
 export function WeekLog() {
     const { state, dispatch } = useStore();
@@ -33,7 +35,7 @@ export function WeekLog() {
     // Get all dates in range
     const datesInRange = daysOfWeek.map(d => format(d, 'yyyy-MM-dd'));
 
-    const weekBullets = Object.values(state.bullets).filter(b =>
+    const weekBullets = useMemo(() => Object.values(state.bullets).filter(b =>
         (b.collectionId ? true : true) && !!b.date && datesInRange.includes(b.date as string)
     ).sort((a, b) => {
         // Sort by date then order
@@ -41,11 +43,20 @@ export function WeekLog() {
         const dateB = b.date || '';
         if (dateA !== dateB) return dateA.localeCompare(dateB);
         return (a.order || 0) - (b.order || 0);
-    });
+    }), [state.bullets, datesInRange.join(',')]); // join dates to avoid array ref dependency issues
 
     const defaultEditorDate = isSameDay(currentDate, new Date()) || datesInRange.includes(format(new Date(), 'yyyy-MM-dd'))
         ? format(new Date(), 'yyyy-MM-dd')
         : weekStartStr;
+
+    const { setFocusedId } = useKeyboardFocus();
+
+    useEffect(() => {
+        // Focus first item when view changes (week changes)
+        if (weekBullets.length > 0) {
+            setFocusedId(weekBullets[0].id);
+        }
+    }, [weekStartStr]);
 
     return (
         <div className="week-log">

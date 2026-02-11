@@ -2,6 +2,7 @@
 import { useStore } from '../store';
 import { createPortal } from 'react-dom';
 import { Folder, X } from 'lucide-react';
+import { usePopupNavigation } from '../hooks/usePopupNavigation';
 
 interface ProjectPickerProps {
     onSelectProject: (collectionId: string | null) => void;
@@ -17,10 +18,20 @@ export function ProjectPicker({ onSelectProject, onCancel, currentCollectionId }
         .filter(c => c.type === 'project')
         .sort((a, b) => b.createdAt - a.createdAt);
 
+    // Focus management
+    const { containerRef, handleKeyDown } = usePopupNavigation({
+        selector: 'button.project-option',
+        onClose: onCancel
+    });
+
     return createPortal(
         <div className="picker-overlay" onClick={onCancel}>
             <div onClick={e => e.stopPropagation()}>
-                <div className="picker-panel">
+                <div
+                    className="picker-panel"
+                    ref={containerRef}
+                    onKeyDown={handleKeyDown}
+                >
                     <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -42,7 +53,7 @@ export function ProjectPicker({ onSelectProject, onCancel, currentCollectionId }
 
                     <button
                         onClick={() => onSelectProject(null)}
-                        className="btn btn-ghost"
+                        className="btn btn-ghost project-option"
                         style={{
                             width: '100%',
                             justifyContent: 'flex-start',
@@ -59,7 +70,7 @@ export function ProjectPicker({ onSelectProject, onCancel, currentCollectionId }
                         <button
                             key={p.id}
                             onClick={() => onSelectProject(p.id)}
-                            className="btn btn-ghost"
+                            className="btn btn-ghost project-option"
                             style={{
                                 width: '100%',
                                 justifyContent: 'flex-start',

@@ -12,6 +12,7 @@ export interface KeyboardShortcutContext {
         dispatch: (action: Action) => void;
         openNote: (id: string) => void;
         onMigratePrompt: (id: string) => void;
+        onMoveToProject: (id: string) => void;
         requestConfirmation: (options: {
             title: string;
             message: string;
@@ -33,7 +34,7 @@ export function handleKeyboardShortcut(
     context: KeyboardShortcutContext
 ) {
     const { state, focusedId, isInput, actions } = context;
-    const { moveUp, moveDown, clearFocus, setEditingId, dispatch, openNote, onMigratePrompt, requestConfirmation } = actions;
+    const { moveUp, moveDown, clearFocus, setEditingId, dispatch, openNote, onMigratePrompt, onMoveToProject, requestConfirmation } = actions;
 
     if (e.key === 'Escape') {
         e.preventDefault();
@@ -84,6 +85,11 @@ export function handleKeyboardShortcut(
             onMigratePrompt(bullet.id);
             break;
         }
+        case 'p': {
+            e.preventDefault();
+            onMoveToProject(bullet.id);
+            break;
+        }
         case 'd': {
             e.preventDefault();
             requestConfirmation({
@@ -92,6 +98,16 @@ export function handleKeyboardShortcut(
                 isDanger: true,
                 confirmLabel: 'Delete',
                 onConfirm: () => dispatch({ type: 'DELETE_BULLET', payload: { id: bullet.id } })
+            });
+            break;
+        }
+        case 'tab': {
+            e.preventDefault();
+            clearFocus();
+            // Create a microtask or small timeout to ensure focus clears before we set native focus? 
+            // Usually not needed, but safe.
+            requestAnimationFrame(() => {
+                document.getElementById('main-bullet-editor-input')?.focus();
             });
             break;
         }
