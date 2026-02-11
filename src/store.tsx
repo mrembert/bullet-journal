@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import type { AppState } from './types';
+import type { AppState, Action } from './types';
 import { useAuth } from './contexts/AuthContext';
 import { performActionInFirestore, subscribeToUserData } from './lib/database';
-import { reducer, initialState, type Action } from './storeReducer';
+import { reducer, initialState } from './storeReducer';
 import { generateUUID } from './lib/utils';
 
 // --- Context ---
 const StoreContext = createContext<{
     state: AppState;
-    dispatch: React.Dispatch<any>; // Using any to accept Actions without explicit IDs from Components if using wrapper
+    dispatch: React.Dispatch<Action>; // Using Action instead of any
 }>({ state: initialState, dispatch: () => null });
 
 export function useStore() {
@@ -34,9 +34,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     // 3. Dispatch Wrapper
     // This intercepts actions, generates IDs if needed, updates local state, AND calls Firestore
-    const dispatch = async (action: any) => {
+    const dispatch = async (action: Action) => {
         // Enforce ID generation for creations
-        let enhancedAction = { ...action };
+        let enhancedAction: any = { ...action };
 
         if (action.type === 'ADD_BULLET' && !action.payload.id) {
             enhancedAction.payload.id = generateUUID();

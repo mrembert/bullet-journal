@@ -11,6 +11,7 @@ import { format, parseISO, addDays } from 'date-fns';
 import { useState, type FormEvent, useRef, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useNoteEditor } from './contexts/NoteEditorContext';
+import { generateUUID } from './lib/utils';
 import { Login, Unauthorized } from './components/Login';
 import { NoteEditor } from './components/NoteEditor';
 import { useConfirmation } from './contexts/ConfirmationContext';
@@ -112,7 +113,7 @@ function App() {
   const createCollection = (e: FormEvent) => {
     e.preventDefault();
     if (newCollectionTitle.trim()) {
-      dispatch({ type: 'ADD_COLLECTION', payload: { title: newCollectionTitle, type: 'project' } });
+      dispatch({ type: 'ADD_COLLECTION', payload: { id: generateUUID(), title: newCollectionTitle, type: 'project' } });
       setNewCollectionTitle('');
       setIsCreatingCollection(false);
     }

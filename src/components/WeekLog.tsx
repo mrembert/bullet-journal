@@ -18,6 +18,7 @@ export function WeekLog() {
         dispatch({
             type: 'SET_VIEW',
             payload: {
+                mode: 'week',
                 date: format(newDate, 'yyyy-MM-dd')
             }
         });

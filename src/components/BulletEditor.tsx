@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
 import type { BulletType } from '../types';
+import { generateUUID } from '../lib/utils';
 
 export function BulletEditor({ defaultDate, autoFocus = true }: { defaultDate?: string, autoFocus?: boolean }) {
     const [content, setContent] = useState('');
@@ -36,6 +37,7 @@ export function BulletEditor({ defaultDate, autoFocus = true }: { defaultDate?: 
             dispatch({
                 type: 'ADD_BULLET',
                 payload: {
+                    id: generateUUID(),
                     content: cleanContent,
                     type,
                     date: targetDate,

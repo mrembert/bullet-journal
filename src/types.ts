@@ -42,7 +42,7 @@ export interface AppState {
 }
 
 export type Action =
-    | { type: 'ADD_BULLET'; payload: { id: string; content: string; type: BulletType; date?: string; collectionId?: string } }
+    | { type: 'ADD_BULLET'; payload: { id: string; content: string; type: BulletType; date?: string | null; collectionId?: string | null; parentNoteId?: string } }
     | { type: 'UPDATE_BULLET'; payload: { id: string; content?: string; state?: BulletState; longFormContent?: string; date?: string | null; collectionId?: string | null } }
     | { type: 'DELETE_BULLET'; payload: { id: string } }
     | { type: 'SET_VIEW'; payload: { mode: ViewMode; date?: string; collectionId?: string } }

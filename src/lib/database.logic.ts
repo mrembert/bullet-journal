@@ -1,32 +1,25 @@
 
 import type {
-    Firestore,
-    CollectionReference,
-    DocumentReference,
-    Unsubscribe,
-    QuerySnapshot,
-    DocumentData
+    Firestore
 } from 'firebase/firestore';
-import type { AppState, Bullet, Collection, BulletType, BulletState } from '../types';
+import type { AppState, Bullet, Collection, Action } from '../types';
 
-// Action Type Definition (Partial, for what we handle in DB)
-export type Action =
-    | { type: 'ADD_BULLET'; payload: { id: string; content: string; type: BulletType; date?: string; collectionId?: string } }
-    | { type: 'UPDATE_BULLET'; payload: { id: string; content?: string; state?: BulletState; longFormContent?: string; date?: string | null; collectionId?: string | null } }
-    | { type: 'DELETE_BULLET'; payload: { id: string } }
-    | { type: 'ADD_COLLECTION'; payload: { id: string; title: string; type: Collection['type'] } }
-    | { type: 'UPDATE_COLLECTION'; payload: { id: string; title?: string; archived?: boolean } }
-    | { type: 'DELETE_COLLECTION'; payload: { id: string } }
-    | { type: 'MIGRATE_BULLET'; payload: { id: string; targetDate: string; newId?: string } } // newId optional as logic depends on collection
-    | { type: 'REORDER_BULLETS'; payload: { items: { id: string, order: number }[] } };
+import {
+    collection,
+    doc,
+    onSnapshot,
+    setDoc,
+    deleteDoc,
+    updateDoc
+} from 'firebase/firestore';
 
 export interface DatabaseDeps {
-    collection: (firestore: Firestore, path: string, ...pathSegments: string[]) => CollectionReference<DocumentData, DocumentData>;
-    doc: (firestore: Firestore | CollectionReference<DocumentData, DocumentData> | DocumentReference<DocumentData, DocumentData>, path?: string, ...pathSegments: string[]) => DocumentReference<DocumentData, DocumentData>;
-    onSnapshot: (reference: CollectionReference<DocumentData, DocumentData>, onNext: (snapshot: QuerySnapshot<DocumentData, DocumentData>) => void, onError?: (error: any) => void) => Unsubscribe;
-    setDoc: (reference: DocumentReference<DocumentData, DocumentData>, data: any) => Promise<void>;
-    updateDoc: (reference: DocumentReference<DocumentData, DocumentData>, data: any) => Promise<void>;
-    deleteDoc: (reference: DocumentReference<DocumentData, DocumentData>) => Promise<void>;
+    collection: typeof collection;
+    doc: typeof doc;
+    onSnapshot: typeof onSnapshot;
+    setDoc: typeof setDoc;
+    updateDoc: typeof updateDoc;
+    deleteDoc: typeof deleteDoc;
 }
 
 export function subscribeToUserDataLogic(
