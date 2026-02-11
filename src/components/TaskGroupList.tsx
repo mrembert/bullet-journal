@@ -30,6 +30,11 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
     const { focusedId, setVisibleIds } = useKeyboardFocus();
     const { groupByProject, showCompleted } = state.preferences;
 
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
     // 1. Filter based on preferences
     const filteredBullets = useMemo(() => bullets.filter(b => {
         if (!showCompleted && (b.state === 'completed' || b.state === 'migrated' || b.state === 'cancelled')) {
@@ -128,12 +133,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
        For now, disable DnD when grouped.
     */
 
-    // We need to define sensors HOOKs at the top level, but we can't conditionally call hooks.
-    // So we must always call useSensors.
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-    );
+
 
     if (enableDragAndDrop && onDragEnd) {
         return (
