@@ -45,7 +45,11 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
     }, [filteredBullets, setVisibleIds]);
 
     // 2. Group if enabled
-    if (groupByProject) {
+    const { grouped, unassigned, projectIds } = useMemo(() => {
+        if (!groupByProject) {
+            return { grouped: {}, unassigned: [], projectIds: [] };
+        }
+
         const grouped: Record<string, Bullet[]> = {};
         const unassigned: Bullet[] = [];
 
@@ -63,6 +67,10 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
             return state.collections[b].createdAt - state.collections[a].createdAt;
         });
 
+        return { grouped, unassigned, projectIds };
+    }, [filteredBullets, groupByProject, state.collections]);
+
+    if (groupByProject) {
         return (
             <div className="task-group-list">
                 {unassigned.length > 0 && (
