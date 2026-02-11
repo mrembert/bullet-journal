@@ -1,7 +1,8 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
-import { Circle, X, Minus, ChevronRight, Trash, FileText, FolderInput, Calendar, MoreVertical } from 'lucide-react';
+import { Trash, FileText, FolderInput, Calendar, MoreVertical } from 'lucide-react';
 import type { Bullet } from '../types';
 import { useStore } from '../store';
+import { BulletIcon } from './BulletIcon';
 import { DatePicker } from './DatePicker';
 import { ProjectPicker } from './ProjectPicker';
 import { useNoteEditor } from '../contexts/NoteEditorContext';
@@ -35,21 +36,6 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
     const handleDateSelect = (date: string | null) => {
         dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, date: date } });
         setShowDatePicker(false);
-    };
-
-    const getIcon = () => {
-        switch (bullet.type) {
-            case 'task':
-                if (bullet.state === 'completed') return <X size={18} />;
-                if (bullet.state === 'migrated') return <ChevronRight size={18} />;
-                return <span style={{ fontSize: '24px', lineHeight: '18px' }}>•</span>;
-            case 'event':
-                return <Circle size={16} fill={bullet.state === 'completed' ? 'currentColor' : 'none'} />;
-            case 'note':
-                return <Minus size={18} />;
-            default:
-                return <span style={{ fontSize: '24px', lineHeight: '18px' }}>•</span>;
-        }
     };
 
     const isCompleted = bullet.state === 'completed';
@@ -105,7 +91,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                         padding: 0
                     }}
                 >
-                    {getIcon()}
+                    <BulletIcon type={bullet.type} state={bullet.state} />
                 </button>
 
                 <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
