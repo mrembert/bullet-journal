@@ -4,6 +4,8 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 interface KeyboardFocusContextType {
     focusedId: string | null;
     setFocusedId: (id: string | null) => void;
+    editingId: string | null;
+    setEditingId: (id: string | null) => void;
     visibleIds: string[];
     setVisibleIds: (ids: string[]) => void;
     moveUp: () => void;
@@ -14,6 +16,8 @@ interface KeyboardFocusContextType {
 const KeyboardFocusContext = createContext<KeyboardFocusContextType>({
     focusedId: null,
     setFocusedId: () => { },
+    editingId: null,
+    setEditingId: () => { },
     visibleIds: [],
     setVisibleIds: () => { },
     moveUp: () => { },
@@ -23,6 +27,7 @@ const KeyboardFocusContext = createContext<KeyboardFocusContextType>({
 
 export function KeyboardFocusProvider({ children }: { children: React.ReactNode }) {
     const [focusedId, setFocusedId] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [visibleIds, setVisibleIds] = useState<string[]>([]);
 
     const moveUp = useCallback(() => {
@@ -59,6 +64,8 @@ export function KeyboardFocusProvider({ children }: { children: React.ReactNode 
         <KeyboardFocusContext.Provider value={{
             focusedId,
             setFocusedId,
+            editingId,
+            setEditingId,
             visibleIds,
             setVisibleIds,
             moveUp,

@@ -85,7 +85,7 @@ export function SearchView() {
                             marginBottom: '0.5rem',
                             fontWeight: 600
                         }}>
-                            {bullet.date ? format(parseISO(bullet.date), 'MMMM d, yyyy') : 'Undated'}
+                            {bullet.date ? format(parseISO(bullet.date as string), 'MMMM d, yyyy') : 'Undated'}
                         </div>
                         <BulletItem bullet={bullet} isFocused={bullet.id === focusedId} />
                     </div>

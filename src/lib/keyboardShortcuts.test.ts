@@ -28,6 +28,7 @@ const createMockActions = () => ({
     moveUp: test.mock.fn(),
     moveDown: test.mock.fn(),
     clearFocus: test.mock.fn(),
+    setEditingId: test.mock.fn(),
     dispatch: test.mock.fn(),
     openNote: test.mock.fn(),
     onMigratePrompt: test.mock.fn(),
@@ -236,6 +237,24 @@ test('Action - d requests confirmation', (t) => {
         type: 'DELETE_BULLET',
         payload: { id: 'b1' }
     });
+});
+
+test('Action - e sets editing id', (t) => {
+    const bullet = createMockBullet('b1');
+    const actions = createMockActions();
+    const context: KeyboardShortcutContext = {
+        state: createMockState({ [bullet.id]: bullet }),
+        focusedId: bullet.id,
+        isInput: false,
+        actions
+    };
+    const event = { key: 'e', preventDefault: t.mock.fn() };
+
+    handleKeyboardShortcut(event, context);
+
+    assert.strictEqual(event.preventDefault.mock.callCount(), 1);
+    assert.strictEqual(actions.setEditingId.mock.callCount(), 1);
+    assert.strictEqual(actions.setEditingId.mock.calls[0].arguments[0], 'b1');
 });
 
 test('No action if not focused', (t) => {

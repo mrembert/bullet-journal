@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
-import { Trash, FileText, FolderInput, Calendar, MoreVertical } from 'lucide-react';
+import { Trash, FileText, FolderInput, Calendar, MoreVertical, Edit2 } from 'lucide-react';
 import type { Bullet } from '../types';
 import { useStore } from '../store';
 import { BulletIcon } from './BulletIcon';
@@ -7,6 +7,7 @@ import { DatePicker } from './DatePicker';
 import { ProjectPicker } from './ProjectPicker';
 import { useNoteEditor } from '../contexts/NoteEditorContext';
 import { useConfirmation } from '../contexts/ConfirmationContext';
+import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
 import { format, parseISO } from 'date-fns';
 
 interface BulletItemProps {
@@ -21,9 +22,38 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
     const [menuOpen, setMenuOpen] = useState(false);
     const { openNote } = useNoteEditor();
     const { requestConfirmation } = useConfirmation();
+    const { editingId, setEditingId } = useKeyboardFocus();
 
     const collection = bullet.collectionId ? state.collections[bullet.collectionId] : null;
     const showCollectionTag = collection && state.view.collectionId !== bullet.collectionId;
+
+    const isEditing = editingId === bullet.id;
+    const [editContent, setEditContent] = useState(bullet.content);
+
+    // Sync local edit content if bullet content changes while not editing
+    useEffect(() => {
+        if (!isEditing) {
+            setEditContent(bullet.content);
+        }
+    }, [bullet.content, isEditing]);
+
+    const handleEdit = () => {
+        setEditContent(bullet.content);
+        setEditingId(bullet.id);
+        setMenuOpen(false);
+    };
+
+    const handleSave = () => {
+        if (editContent.trim() !== bullet.content) {
+            dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, content: editContent.trim() } });
+        }
+        setEditingId(null);
+    };
+
+    const handleCancel = () => {
+        setEditContent(bullet.content);
+        setEditingId(null);
+    };
 
     const toggleState = () => {
         if (bullet.state === 'open') {
@@ -94,8 +124,36 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                     <BulletIcon type={bullet.type} state={bullet.state} />
                 </button>
 
-                <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    {bullet.content}
+                <span
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    onClick={!isEditing ? handleEdit : undefined}
+                >
+                    {isEditing ? (
+                        <input
+                            autoFocus
+                            className="input"
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            onBlur={handleSave}
+                            onKeyDown={(e) => {
+                                e.stopPropagation(); // Prevent keyboard shortcuts
+                                if (e.key === 'Enter') handleSave();
+                                if (e.key === 'Escape') handleCancel();
+                            }}
+                            style={{
+                                padding: '2px 4px',
+                                fontSize: 'inherit',
+                                fontFamily: 'inherit',
+                                background: 'hsl(var(--color-bg-primary))',
+                                border: '1px solid hsl(var(--color-accent))',
+                                borderRadius: '4px',
+                                width: '100%',
+                                marginLeft: '-4px'
+                            }}
+                        />
+                    ) : (
+                        bullet.content
+                    )}
                     {showCollectionTag && (
                         <span style={{
                             fontSize: '0.7rem',
@@ -203,6 +261,15 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                     <FileText size={14} /> {hasNote ? 'View Note' : 'Add Note'}
                                 </button>
 
+                                {/* Edit Text */}
+                                <button
+                                    onClick={handleEdit}
+                                    className="btn btn-ghost"
+                                    style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
+                                >
+                                    <Edit2 size={14} /> Edit Text
+                                </button>
+
                                 {/* Project Picker */}
                                 <button
                                     onClick={() => setShowProjectPicker(!showProjectPicker)}
@@ -233,7 +300,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                 </button>
                                 {showDatePicker && (
                                     <DatePicker
-                                        currentDate={bullet.date || undefined}
+                                        currentDate={(bullet.date || undefined) as string | undefined}
                                         onSelectDate={(date) => {
                                             handleDateSelect(date);
                                             setMenuOpen(false);
