@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { cleanNoteContent } from './noteUtils.ts';
+import { cleanNoteContent, isValidUrl } from './noteUtils.ts';
 import type { Bullet } from '../types.ts';
 
 const mockBullets: Record<string, any> = {
@@ -96,4 +96,47 @@ test('cleanNoteContent - handles null or missing attrs/bulletId', () => {
     const parsed = JSON.parse(cleaned);
 
     assert.strictEqual(parsed.content.length, 3);
+});
+
+test('isValidUrl - valid protocols', () => {
+    assert.strictEqual(isValidUrl('http://example.com'), true);
+    assert.strictEqual(isValidUrl('https://example.com'), true);
+    assert.strictEqual(isValidUrl('mailto:user@example.com'), true);
+    assert.strictEqual(isValidUrl('tel:+1234567890'), true);
+});
+
+test('isValidUrl - case insensitivity', () => {
+    assert.strictEqual(isValidUrl('HTTP://example.com'), true);
+    assert.strictEqual(isValidUrl('HTTPS://example.com'), true);
+    assert.strictEqual(isValidUrl('MAILTO:user@example.com'), true);
+    assert.strictEqual(isValidUrl('TEL:+1234567890'), true);
+});
+
+test('isValidUrl - invalid protocols', () => {
+    assert.strictEqual(isValidUrl('javascript:alert(1)'), false);
+    assert.strictEqual(isValidUrl('vbscript:alert(1)'), false);
+    assert.strictEqual(isValidUrl('data:text/plain,Hello'), false);
+    assert.strictEqual(isValidUrl('ftp://example.com'), false);
+    assert.strictEqual(isValidUrl('file:///etc/passwd'), false);
+});
+
+test('isValidUrl - relative URLs', () => {
+    assert.strictEqual(isValidUrl('/path/to/resource'), false);
+    assert.strictEqual(isValidUrl('relative/path'), false);
+    assert.strictEqual(isValidUrl('//example.com'), false); // Protocol-relative URLs are safer than javascript: but strict validation might exclude them. Let's stick to strict protocols.
+});
+
+test('isValidUrl - whitespace handling', () => {
+    assert.strictEqual(isValidUrl('  https://example.com  '), true);
+    assert.strictEqual(isValidUrl('  javascript:alert(1)  '), false);
+});
+
+test('isValidUrl - empty or invalid input', () => {
+    assert.strictEqual(isValidUrl(''), false);
+    // @ts-expect-error Testing invalid input type
+    assert.strictEqual(isValidUrl(null), false);
+    // @ts-expect-error Testing invalid input type
+    assert.strictEqual(isValidUrl(undefined), false);
+    // @ts-expect-error Testing invalid input type
+    assert.strictEqual(isValidUrl(123), false);
 });
