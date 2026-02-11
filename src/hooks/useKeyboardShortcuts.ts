@@ -1,9 +1,9 @@
+
 import { useEffect, useRef } from 'react';
 import { useStore } from '../store';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
 import { useNoteEditor } from '../contexts/NoteEditorContext';
 import { useConfirmation } from '../contexts/ConfirmationContext';
-import { handleKeyboardShortcut } from '../lib/keyboardShortcuts';
 
 export function useKeyboardShortcuts(onMigratePrompt: (bulletId: string) => void) {
     const { state, dispatch } = useStore();
@@ -27,22 +27,65 @@ export function useKeyboardShortcuts(onMigratePrompt: (bulletId: string) => void
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const activeTag = document.activeElement?.tagName.toLowerCase();
-            const isInput = activeTag === 'input' || activeTag === 'textarea' || (document.activeElement as HTMLElement)?.isContentEditable || false;
+            const isInput = activeTag === 'input' || activeTag === 'textarea' || (document.activeElement as HTMLElement)?.isContentEditable;
 
-            handleKeyboardShortcut(e, {
-                state: stateRef.current,
-                focusedId: focusedIdRef.current,
-                isInput,
-                actions: {
-                    moveUp,
-                    moveDown,
-                    clearFocus,
-                    dispatch,
-                    openNote: (id) => openNoteRef.current(id),
-                    onMigratePrompt: (id) => onMigratePromptRef.current(id),
-                    requestConfirmation: (opts) => requestConfirmationRef.current(opts),
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                clearFocus();
+                return;
+            }
+
+            if (isInput) return;
+
+            const key = e.key.toLowerCase();
+
+            // 1. Navigation
+            if (key === 'j' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                moveDown();
+                return;
+            } else if (key === 'k' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                moveUp();
+                return;
+            }
+
+            // 2. Actions on focused item
+            const currentFocusedId = focusedIdRef.current;
+            if (!currentFocusedId) return;
+
+            const bullet = stateRef.current.bullets[currentFocusedId];
+            if (!bullet) return;
+
+            switch (key) {
+                case 'x': {
+                    e.preventDefault();
+                    const newState = bullet.state === 'completed' ? 'open' : 'completed';
+                    dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, state: newState } });
+                    break;
                 }
-            });
+                case 'n': {
+                    e.preventDefault();
+                    openNoteRef.current(bullet.id);
+                    break;
+                }
+                case 'm': {
+                    e.preventDefault();
+                    onMigratePromptRef.current(bullet.id);
+                    break;
+                }
+                case 'd': {
+                    e.preventDefault();
+                    requestConfirmationRef.current({
+                        title: 'Delete Item',
+                        message: 'Delete this item?',
+                        isDanger: true,
+                        confirmLabel: 'Delete',
+                        onConfirm: () => dispatch({ type: 'DELETE_BULLET', payload: { id: bullet.id } })
+                    });
+                    break;
+                }
+            }
         };
 
         window.addEventListener('keydown', handleKeyDown);
