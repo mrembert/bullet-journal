@@ -37,3 +37,24 @@ export function cleanNoteContent(raw: string, bullets: Record<string, Bullet>): 
         return raw;
     }
 }
+
+/**
+ * Validates a URL to ensure it uses a safe protocol.
+ * Allowed protocols: http, https, mailto, tel.
+ * Relative URLs are NOT allowed.
+ *
+ * @param url - The URL string to validate.
+ * @returns True if the URL is valid and safe, false otherwise.
+ */
+export function isValidUrl(url: string): boolean {
+    if (!url || typeof url !== 'string') return false;
+
+    // Trim whitespace
+    const trimmedUrl = url.trim();
+
+    // Check for allowed protocols using a case-insensitive regex
+    // We strictly require the protocol to be at the start of the string
+    const allowedProtocols = /^(https?:\/\/|mailto:|tel:)/i;
+
+    return allowedProtocols.test(trimmedUrl);
+}

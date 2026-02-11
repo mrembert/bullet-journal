@@ -5,6 +5,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import { TaskExtension } from './extensions/TaskExtension';
+import { isValidUrl } from '../lib/noteUtils';
 import { Bold, Italic, List, ListOrdered, CheckSquare, Link as LinkIcon, Underline as UnderlineIcon } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -128,7 +129,9 @@ function RichTextEditorInner({ content, onChange, onCreateTask, onSaveAndClose }
                             editor.chain().focus().extendMarkRange('link').unsetLink().run();
                             return;
                         }
-                        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                        if (isValidUrl(url)) {
+                            editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                        }
                     }}
                     active={editor.isActive('link')}
                     title="Link"
