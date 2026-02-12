@@ -34,9 +34,19 @@ export function SortableProjectItem({ collection, isActive, onSelect, onToggleAr
                 <button
                     onClick={onSelect}
                     className={`btn ${isActive ? 'btn-primary' : 'btn-ghost'}`}
-                    style={{ justifyContent: 'flex-start', flex: 1, fontSize: '0.9rem', cursor: 'grab' }}
+                    style={{ justifyContent: 'flex-start', flex: 1, fontSize: '0.9rem', cursor: 'grab', minWidth: 0, textAlign: 'left' }}
+                    title={collection.title}
                 >
-                    <List size={16} /> {collection.title}
+                    <List size={16} style={{ flexShrink: 0 }} />
+                    <span style={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        flex: 1,
+                        minWidth: 0
+                    }}>
+                        {collection.title}
+                    </span>
                 </button>
                 <div className="project-actions" style={{ display: 'flex' }}>
                     <button
