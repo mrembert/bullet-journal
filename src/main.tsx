@@ -15,15 +15,15 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <AuthProvider>
-        <StoreProvider>
-          <NoteEditorProvider>
-            <ConfirmationProvider>
-              <ToastProvider>
+        <ToastProvider>
+          <StoreProvider>
+            <NoteEditorProvider>
+              <ConfirmationProvider>
                 <App />
-              </ToastProvider>
-            </ConfirmationProvider>
-          </NoteEditorProvider>
-        </StoreProvider>
+              </ConfirmationProvider>
+            </NoteEditorProvider>
+          </StoreProvider>
+        </ToastProvider>
       </AuthProvider>
     </ErrorBoundary>
   </StrictMode>,
