@@ -38,6 +38,16 @@ export function reducer(state: AppState, action: Action): AppState {
                 bullets: { ...state.bullets, [id]: newBullet },
             };
         }
+        case 'ADD_BULLETS': {
+            const newBullets = { ...state.bullets };
+            action.payload.bullets.forEach(bullet => {
+                newBullets[bullet.id] = bullet;
+            });
+            return {
+                ...state,
+                bullets: newBullets
+            };
+        }
         case 'UPDATE_BULLET': {
             const bullet = state.bullets[action.payload.id];
             if (!bullet) return state;
@@ -65,6 +75,32 @@ export function reducer(state: AppState, action: Action): AppState {
                 },
             };
         }
+        case 'UPDATE_BULLETS': {
+            const newBullets = { ...state.bullets };
+            const now = Date.now();
+            action.payload.ids.forEach(id => {
+                const bullet = newBullets[id];
+                if (bullet) {
+                    const updates: Partial<Bullet> = {
+                        ...action.payload.updates,
+                        updatedAt: now,
+                    };
+
+                    // Handle completion timestamp
+                    if (action.payload.updates.state === 'completed' && bullet.state !== 'completed') {
+                        updates.completedAt = now;
+                    } else if (action.payload.updates.state === 'open' && bullet.state === 'completed') {
+                        updates.completedAt = undefined;
+                    }
+
+                    newBullets[id] = { ...bullet, ...updates };
+                }
+            });
+            return {
+                ...state,
+                bullets: newBullets,
+            };
+        }
         case 'REORDER_BULLETS': {
             const newBullets = { ...state.bullets };
             // Ensure we handle potential undefined bullets gracefully
@@ -88,6 +124,13 @@ export function reducer(state: AppState, action: Action): AppState {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { [action.payload.id]: deleted, ...remainingBullets } = state.bullets;
             return { ...state, bullets: remainingBullets };
+        }
+        case 'DELETE_BULLETS': {
+            const newBullets = { ...state.bullets };
+            action.payload.ids.forEach(id => {
+                delete newBullets[id];
+            });
+            return { ...state, bullets: newBullets };
         }
         case 'MIGRATE_BULLET': {
             const oldBullet = state.bullets[action.payload.id];
