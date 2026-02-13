@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { addDays, addMonths, startOfMonth, format } from 'date-fns';
-import { ArrowRight, X, Calendar, Trash2 } from 'lucide-react';
+import { ArrowRight, X, Calendar as CalendarIcon, Trash2, Keyboard } from 'lucide-react';
 import { usePopupNavigation } from '../hooks/usePopupNavigation';
+import { Calendar } from './Calendar';
 
 interface DatePickerProps {
     currentDate?: string | null | undefined;
@@ -15,6 +16,7 @@ export function DatePicker({ currentDate, onSelectDate, onCancel }: DatePickerPr
     const nextWeek = addDays(today, 7);
     const nextMonth = startOfMonth(addMonths(today, 1));
     const [isCustom, setIsCustom] = useState(false);
+    const [isManual, setIsManual] = useState(false);
 
     const options = [
         { label: 'Today', date: format(today, 'yyyy-MM-dd') },
@@ -29,37 +31,76 @@ export function DatePicker({ currentDate, onSelectDate, onCancel }: DatePickerPr
         onClose: onCancel
     });
 
+    const customDateRef = useRef<HTMLInputElement>(null);
+
     const panelContent = isCustom ? (
         <div className="picker-panel">
-            <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--color-text-secondary))' }}>PICK DATE</span>
-                <button onClick={() => setIsCustom(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'hsl(var(--color-text-primary))' }}><X size={14} /></button>
+            <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.25rem' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--color-text-secondary))' }}>
+                    {isManual ? 'MANUAL ENTRY' : 'SELECT DATE'}
+                </span>
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    <button
+                        type="button"
+                        onClick={() => setIsManual(!isManual)}
+                        className="btn btn-ghost"
+                        style={{ padding: '0.25rem', height: 'auto', minWidth: 'auto', color: 'hsl(var(--color-text-secondary))' }}
+                        title={isManual ? "Switch to Calendar" : "Switch to Manual Entry"}
+                    >
+                        {isManual ? <CalendarIcon size={14} /> : <Keyboard size={14} />}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => { setIsCustom(false); setIsManual(false); }}
+                        style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'hsl(var(--color-text-primary))', padding: '0.25rem' }}
+                    >
+                        <X size={14} />
+                    </button>
+                </div>
             </div>
-            <input
-                type="date"
-                className="input"
-                id="custom-date-field"
-                defaultValue={currentDate || ''}
-                style={{ background: 'hsl(var(--color-bg-primary))', borderRadius: 'var(--radius-sm)', marginBottom: '0.5rem' }}
-                onKeyDown={(e) => {
-                    e.stopPropagation();
-                    if (e.key === 'Enter') {
-                        const val = (document.getElementById('custom-date-field') as HTMLInputElement).value;
-                        if (val) onSelectDate(val);
-                    }
-                }}
-                autoFocus
-            />
-            <button
-                className="btn btn-primary"
-                style={{ width: '100%', fontSize: '0.85rem' }}
-                onClick={() => {
-                    const val = (document.getElementById('custom-date-field') as HTMLInputElement).value;
-                    if (val) onSelectDate(val);
-                }}
-            >
-                Apply Date
-            </button>
+
+            {!isManual ? (
+                <Calendar onSelectDate={onSelectDate} initialDate={currentDate || undefined} />
+            ) : (
+                <div style={{ padding: '0.25rem' }}>
+                    <input
+                        type="date"
+                        className="input"
+                        ref={customDateRef}
+                        defaultValue={currentDate || ''}
+                        style={{
+                            background: 'hsl(var(--color-bg-primary))',
+                            borderRadius: 'var(--radius-sm)',
+                            marginBottom: '0.5rem',
+                            paddingLeft: '0.75rem',
+                            border: '1px solid hsl(var(--color-text-secondary) / 0.2)'
+                        }}
+                        onKeyDown={(e) => {
+                            e.stopPropagation();
+                            if (e.key === 'Enter') {
+                                const val = customDateRef.current?.value;
+                                if (val) onSelectDate(val);
+                            }
+                            if (e.key === 'Escape') {
+                                setIsManual(false);
+                            }
+                        }}
+                        autoFocus
+                    />
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        style={{ width: '100%', fontSize: '0.85rem' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const val = customDateRef.current?.value;
+                            if (val) onSelectDate(val);
+                        }}
+                    >
+                        Apply Date
+                    </button>
+                </div>
+            )}
         </div>
     ) : (
         <div
@@ -81,23 +122,25 @@ export function DatePicker({ currentDate, onSelectDate, onCancel }: DatePickerPr
                 }}>
                     ASSIGN DATE...
                 </div>
-                <button onClick={onCancel} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, color: 'hsl(var(--color-text-primary))' }}>
+                <button type="button" onClick={onCancel} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, color: 'hsl(var(--color-text-primary))' }}>
                     <X size={14} />
                 </button>
             </div>
 
             {options.map(opt => (
                 <button
+                    type="button"
                     key={opt.date}
                     onClick={() => onSelectDate(opt.date)}
                     className="btn btn-ghost date-option"
                     style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.9rem' }}
                 >
-                    <Calendar size={14} /> {opt.label}
+                    <CalendarIcon size={14} /> {opt.label}
                 </button>
             ))}
 
             <button
+                type="button"
                 onClick={() => setIsCustom(true)}
                 className="btn btn-ghost date-option"
                 style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.9rem' }}
@@ -107,6 +150,7 @@ export function DatePicker({ currentDate, onSelectDate, onCancel }: DatePickerPr
 
             {currentDate && (
                 <button
+                    type="button"
                     onClick={() => onSelectDate(null)}
                     className="btn btn-ghost date-option"
                     style={{
