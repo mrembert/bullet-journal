@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo } from 'react';
 import type { AppState, Action } from './types';
 import { useAuth } from './contexts/AuthContext';
 import { performActionInFirestore, subscribeToUserData } from './lib/database';
@@ -34,7 +34,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     // 3. Dispatch Wrapper
     // This intercepts actions, generates IDs if needed, updates local state, AND calls Firestore
-    const dispatch = async (action: Action) => {
+    const dispatch = useCallback(async (action: Action) => {
         // Enforce ID generation for creations
         let enhancedAction: any = { ...action };
 
@@ -59,10 +59,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 performActionInFirestore(user.uid, enhancedAction, state);
             }
         }
-    };
+    }, [state, user]);
+
+    const value = useMemo(() => ({ state, dispatch }), [state, dispatch]);
 
     return (
-        <StoreContext.Provider value={{ state, dispatch }}>
+        <StoreContext.Provider value={value}>
             {children}
         </StoreContext.Provider>
     );
