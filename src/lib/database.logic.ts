@@ -101,6 +101,18 @@ export async function performActionInFirestoreLogic(
                 await deps.deleteDoc(deps.doc(usersRef, 'bullets', action.payload.id));
                 break;
             }
+            case 'RESTORE_BULLET': {
+                const { id, ...data } = action.payload;
+                const cleanData = Object.fromEntries(
+                    Object.entries(data).filter(([, v]) => v !== undefined)
+                );
+                await deps.setDoc(deps.doc(usersRef, 'bullets', id), {
+                    ...cleanData,
+                    id,
+                    updatedAt: Date.now()
+                });
+                break;
+            }
             case 'MIGRATE_BULLET': {
                 const bullet = currentState.bullets[action.payload.id];
                 if (!bullet) return;

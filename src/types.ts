@@ -56,4 +56,6 @@ export type Action =
     | { type: 'REORDER_BULLETS'; payload: { items: { id: string, order: number }[] } }
     | { type: 'REORDER_COLLECTIONS'; payload: { items: { id: string, order: number }[] } } // Added action
     | { type: 'TOGGLE_PREFERENCE'; payload: { key: keyof AppState['preferences'] } }
-    | { type: 'LOAD_DATA'; payload: Partial<AppState> }; // Partial loading for sync
+    | { type: 'LOAD_DATA'; payload: Partial<AppState> } // Partial loading for sync
+    | { type: 'RESTORE_BULLET'; payload: Bullet }
+    | { type: 'UNDO'; payload?: void };

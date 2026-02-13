@@ -273,6 +273,59 @@ test('No action if not focused', (t) => {
     assert.strictEqual(actions.dispatch.mock.callCount(), 0);
 });
 
+test('Keyboard Shortcuts - Ctrl+Z dispatches UNDO', (t) => {
+    const actions = createMockActions();
+    const context: KeyboardShortcutContext = {
+        state: createMockState(),
+        focusedId: null,
+        isInput: false,
+        actions
+    };
+    const event = { key: 'z', ctrlKey: true, metaKey: false, preventDefault: t.mock.fn() };
+
+    // @ts-expect-error - Mock event
+    handleKeyboardShortcut(event, context);
+
+    assert.strictEqual(event.preventDefault.mock.callCount(), 1);
+    assert.strictEqual(actions.dispatch.mock.callCount(), 1);
+    assert.deepStrictEqual(actions.dispatch.mock.calls[0].arguments[0], { type: 'UNDO' });
+});
+
+test('Keyboard Shortcuts - Meta+Z dispatches UNDO', (t) => {
+    const actions = createMockActions();
+    const context: KeyboardShortcutContext = {
+        state: createMockState(),
+        focusedId: null,
+        isInput: false,
+        actions
+    };
+    const event = { key: 'z', ctrlKey: false, metaKey: true, preventDefault: t.mock.fn() };
+
+    // @ts-expect-error - Mock event
+    handleKeyboardShortcut(event, context);
+
+    assert.strictEqual(event.preventDefault.mock.callCount(), 1);
+    assert.strictEqual(actions.dispatch.mock.callCount(), 1);
+    assert.deepStrictEqual(actions.dispatch.mock.calls[0].arguments[0], { type: 'UNDO' });
+});
+
+test('Keyboard Shortcuts - Ctrl+Z is ignored if isInput is true', (t) => {
+    const actions = createMockActions();
+    const context: KeyboardShortcutContext = {
+        state: createMockState(),
+        focusedId: null,
+        isInput: true,
+        actions
+    };
+    const event = { key: 'z', ctrlKey: true, metaKey: false, preventDefault: t.mock.fn() };
+
+    // @ts-expect-error - Mock event
+    handleKeyboardShortcut(event, context);
+
+    assert.strictEqual(event.preventDefault.mock.callCount(), 0);
+    assert.strictEqual(actions.dispatch.mock.callCount(), 0);
+});
+
 test('No action if focused bullet does not exist', (t) => {
     const actions = createMockActions();
     const context: KeyboardShortcutContext = {

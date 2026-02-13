@@ -326,4 +326,46 @@ describe('storeReducer', () => {
         assert.ok(state.bullets['loaded']);
         assert.strictEqual(state.preferences.groupByProject, true);
     });
+
+    test('RESTORE_BULLET restores a bullet state', () => {
+        const startState: AppState = {
+            ...initialState,
+            bullets: {
+                'b1': {
+                    id: 'b1',
+                    content: 'Modified',
+                    type: 'task',
+                    state: 'open',
+                    order: 1,
+                    createdAt: 100,
+                    updatedAt: 200,
+                    completedAt: undefined
+                }
+            }
+        };
+
+        const originalBullet: Bullet = {
+            id: 'b1',
+            content: 'Original',
+            type: 'task',
+            state: 'open',
+            order: 1,
+            createdAt: 100,
+            updatedAt: 100,
+            completedAt: undefined
+        };
+
+        const action: Action = {
+            type: 'RESTORE_BULLET',
+            payload: originalBullet
+        };
+
+        const state = reducer(startState, action);
+        assert.deepStrictEqual(state.bullets['b1'], originalBullet);
+    });
+
+    test('UNDO returns state as is', () => {
+        const state = reducer(initialState, { type: 'UNDO' });
+        assert.strictEqual(state, initialState);
+    });
 });

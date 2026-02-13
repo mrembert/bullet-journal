@@ -220,6 +220,17 @@ export function reducer(state: AppState, action: Action): AppState {
             }
             return newState;
         }
+        case 'RESTORE_BULLET': {
+            return {
+                ...state,
+                bullets: {
+                    ...state.bullets,
+                    [action.payload.id]: action.payload,
+                },
+            };
+        }
+        case 'UNDO':
+            return state;
         default:
             return state;
     }

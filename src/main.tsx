@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { NoteEditorProvider } from './contexts/NoteEditorContext.tsx'
 import { ConfirmationProvider } from './contexts/ConfirmationContext.tsx'
+import { ToastProvider } from './contexts/ToastContext.tsx'
 
 console.log("Main: Initializing bundle...");
 
@@ -17,7 +18,9 @@ createRoot(document.getElementById('root')!).render(
         <StoreProvider>
           <NoteEditorProvider>
             <ConfirmationProvider>
-              <App />
+              <ToastProvider>
+                <App />
+              </ToastProvider>
             </ConfirmationProvider>
           </NoteEditorProvider>
         </StoreProvider>
