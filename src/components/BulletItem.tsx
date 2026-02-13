@@ -6,6 +6,9 @@ import { useStore } from '../store';
 import { BulletIcon } from './BulletIcon';
 import { DatePicker } from './DatePicker';
 import { ProjectPicker } from './ProjectPicker';
+import { RecurrencePicker } from './RecurrencePicker';
+import { generateRecurringDates, type RecurrenceConfig } from '../lib/recurrence';
+import { generateUUID } from '../lib/utils';
 import { useNoteEditor } from '../contexts/NoteEditorContext';
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
@@ -22,6 +25,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
     const { state, dispatch } = useStore();
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showProjectPicker, setShowProjectPicker] = useState(false);
+    const [showRecurrencePicker, setShowRecurrencePicker] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [showRecurringDeleteConfirm, setShowRecurringDeleteConfirm] = useState(false);
 
@@ -104,6 +108,74 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
             }
         });
         showToast(`Updated ${ids.length} future events.`);
+        setMenuOpen(false);
+    };
+
+    const handleRecurrenceSet = (config: RecurrenceConfig | null) => {
+        if (!config) {
+            setShowRecurrencePicker(false);
+            return;
+        }
+
+        // Logic to convert current bullet to recurring series
+        const startDate = bullet.date || format(new Date(), 'yyyy-MM-dd');
+        const dates = generateRecurringDates(startDate, config);
+        const recurringId = generateUUID();
+        const now = Date.now();
+        const recurrenceRuleStr = JSON.stringify(config);
+
+        // 1. Update current bullet to be the "first"
+        // 2. Generate subsequent bullets
+
+        // We'll treat the current bullet as the first instance.
+        // If the generated dates includes the start date, we skip creating a new one for it and just update the existing one.
+        // generateRecurringDates typically includes start date if valid.
+
+        const bulletsToAdd: Bullet[] = [];
+        let isFirst = true;
+
+        dates.forEach((dateStr, index) => {
+            if (isFirst && dateStr === startDate) {
+                // Update existing
+                dispatch({
+                    type: 'UPDATE_BULLET',
+                    payload: {
+                        id: bullet.id,
+                        recurringId,
+                        recurrenceRule: recurrenceRuleStr,
+                        date: dateStr // Ensure date is set/normalized
+                    }
+                });
+                isFirst = false;
+            } else {
+                // Create new
+                bulletsToAdd.push({
+                    id: generateUUID(),
+                    content: bullet.content,
+                    type: bullet.type,
+                    state: 'open',
+                    date: dateStr,
+                    collectionId: bullet.collectionId,
+                    recurringId,
+                    recurrenceRule: recurrenceRuleStr,
+                    longFormContent: bullet.longFormContent,
+                    parentNoteId: bullet.parentNoteId,
+                    createdAt: now,
+                    updatedAt: now,
+                    order: now + index,
+                    completedAt: undefined
+                });
+            }
+        });
+
+        if (bulletsToAdd.length > 0) {
+            dispatch({ type: 'ADD_BULLETS', payload: { bullets: bulletsToAdd } });
+            showToast(`Created ${bulletsToAdd.length} recurring events.`);
+        } else if (!isFirst) {
+             showToast(`Updated to recurring event.`);
+        }
+
+        setShowRecurrencePicker(false);
         setMenuOpen(false);
     };
 
@@ -319,7 +391,12 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                             <div
                                 className="bullet-menu-overlay"
                                 style={{ position: 'fixed', inset: 0, zIndex: 9 }}
-                                onClick={() => { setMenuOpen(false); setShowDatePicker(false); setShowProjectPicker(false); }}
+                                onClick={() => {
+                                    setMenuOpen(false);
+                                    setShowDatePicker(false);
+                                    setShowProjectPicker(false);
+                                    setShowRecurrencePicker(false);
+                                }}
                             />
                             <div className="bullet-menu" style={{
                                 position: 'absolute',
@@ -354,7 +431,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                 </button>
 
                                 {/* Recurring Actions */}
-                                {isRecurring && (
+                                {isRecurring ? (
                                     <button
                                         onClick={handleUpdateFuture}
                                         className="btn btn-ghost"
@@ -362,6 +439,26 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                     >
                                         <Repeat size={14} /> Update Future Events
                                     </button>
+                                ) : (
+                                    <div style={{ position: 'relative' }}>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowRecurrencePicker(!showRecurrencePicker);
+                                            }}
+                                            className="btn btn-ghost"
+                                            style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
+                                        >
+                                            <Repeat size={14} /> Make Recurring...
+                                        </button>
+                                        {showRecurrencePicker && (
+                                            <RecurrencePicker
+                                                startDate={parseISO(bullet.date || format(new Date(), 'yyyy-MM-dd'))}
+                                                onChange={handleRecurrenceSet}
+                                                onClose={() => setShowRecurrencePicker(false)}
+                                            />
+                                        )}
+                                    </div>
                                 )}
 
                                 {/* Project Picker */}
