@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { BulletItem } from './BulletItem';
@@ -11,6 +12,7 @@ interface SortableBulletItemProps {
 }
 
 export function SortableBulletItem({ bullet, isFocused }: SortableBulletItemProps) {
+    const [menuOpen, setMenuOpen] = useState(false);
     const {
         attributes,
         listeners,
@@ -25,7 +27,7 @@ export function SortableBulletItem({ bullet, isFocused }: SortableBulletItemProp
         transition,
         opacity: isDragging ? 0.3 : 1,
         position: 'relative' as const,
-        zIndex: isDragging ? 2 : 1,
+        zIndex: isDragging ? 10 : (menuOpen ? 100 : 'auto'),
         width: '100%',
     };
 
@@ -41,7 +43,11 @@ export function SortableBulletItem({ bullet, isFocused }: SortableBulletItemProp
             exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
             transition={{ duration: 0.2 }}
         >
-            <BulletItem bullet={bullet} isFocused={isFocused} />
+            <BulletItem
+                bullet={bullet}
+                isFocused={isFocused}
+                onMenuOpenChange={setMenuOpen}
+            />
         </motion.div>
     );
 }
