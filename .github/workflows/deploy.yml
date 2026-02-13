@@ -44,36 +44,20 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        working-directory: terraform
+      - name: Ensure Artifact Registry exists
         run: |
-          terraform init \
-            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET_NAME }}" \
-            -backend-config="prefix=terraform/state"
-
-      - name: Terraform Apply (Infra - Registry)
-        working-directory: terraform
-        env:
-          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
-          TF_VAR_region: ${{ secrets.GCP_REGION }}
-          TF_VAR_image_tag: "latest" # Placeholder, not used by registry resource
-          TF_VAR_repository_name: ${{ env.REPO_NAME }}
-          TF_VAR_service_name: ${{ env.SERVICE_NAME }}
-        run: |
-          terraform apply -auto-approve -target=google_artifact_registry_repository.default
+          gcloud artifacts repositories create ${{ env.REPO_NAME }} \
+            --repository-format=docker \
+            --location=${{ env.REGION }} \
+            --description="Docker repository for Bullet Journal App" || true
 
       - name: Configure Docker Auth
         run: |
-          gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
       - name: Build and Push Docker Image
-        env:
-          IMAGE_TAG: ${{ github.sha }}
         run: |
-          IMAGE_URI="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${IMAGE_TAG}"
+          IMAGE_URI="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
           docker build -t $IMAGE_URI \
             --build-arg VITE_FIREBASE_API_KEY="${{ secrets.VITE_FIREBASE_API_KEY }}" \
             --build-arg VITE_FIREBASE_AUTH_DOMAIN="${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" \
@@ -84,13 +68,14 @@ jobs:
             .
           docker push $IMAGE_URI
 
-      - name: Terraform Apply (Deploy Service)
-        working-directory: terraform
-        env:
-          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
-          TF_VAR_region: ${{ secrets.GCP_REGION }}
-          TF_VAR_image_tag: ${{ github.sha }}
-          TF_VAR_repository_name: ${{ env.REPO_NAME }}
-          TF_VAR_service_name: ${{ env.SERVICE_NAME }}
-        run: |
-          terraform apply -auto-approve
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          flags: '--allow-unauthenticated'
+
+      - name: Show Output
+        run: echo ${{ steps.deploy.outputs.url }}
