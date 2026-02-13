@@ -1,10 +1,6 @@
 
 import type {
-    Firestore
-} from 'firebase/firestore';
-import type { AppState, Bullet, Collection, Action } from '../types';
-
-import {
+    Firestore,
     collection,
     doc,
     onSnapshot,
@@ -12,6 +8,7 @@ import {
     deleteDoc,
     updateDoc
 } from 'firebase/firestore';
+import type { AppState, Bullet, Collection, Action } from '../types';
 
 export interface DatabaseDeps {
     collection: typeof collection;

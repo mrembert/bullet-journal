@@ -1,7 +1,8 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { addDays, addMonths, startOfMonth, format } from 'date-fns';
 import { ArrowRight, X } from 'lucide-react';
-
+import { usePopupNavigation } from '../hooks/usePopupNavigation';
 
 interface MigrationPickerProps {
     onSelectDate: (date: string) => void;
@@ -14,15 +15,6 @@ export function MigrationPicker({ onSelectDate, onCancel }: MigrationPickerProps
     const nextMonth = startOfMonth(addMonths(today, 1));
     const monthAfterNext = addMonths(nextMonth, 1);
     const [isCustom, setIsCustom] = React.useState(false);
-    const [selectedIndex, setSelectedIndex] = React.useState(0);
-    const containerRef = React.useRef<HTMLDivElement>(null);
-
-    // Initial focus to capture keyboard events
-    React.useEffect(() => {
-        if (!isCustom) {
-            containerRef.current?.focus();
-        }
-    }, [isCustom]);
 
     const options = [
         { label: 'Tomorrow', date: format(addDays(today, 1), 'yyyy-MM-dd') },
@@ -33,135 +25,97 @@ export function MigrationPicker({ onSelectDate, onCancel }: MigrationPickerProps
         { label: 'Custom Date...', isCustom: true }
     ];
 
-    React.useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                if (isCustom) setIsCustom(false);
-                else onCancel();
-                return;
-            }
+    // Focus management
+    const { containerRef, handleKeyDown } = usePopupNavigation({
+        selector: 'button.migrate-option',
+        onClose: onCancel
+    });
 
-            if (isCustom) return; // Let input handle its own keys
+    const customDateRef = React.useRef<HTMLInputElement>(null);
 
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                setSelectedIndex(curr => (curr + 1) % options.length);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                setSelectedIndex(curr => (curr - 1 + options.length) % options.length);
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                const selected = options[selectedIndex];
-                if (selected.isCustom) {
-                    setIsCustom(true);
-                } else if (selected.date) {
-                    onSelectDate(selected.date);
-                }
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isCustom, onCancel, onSelectDate, selectedIndex, options.length]);
-
-    if (isCustom) {
-        return (
+    const panelContent = isCustom ? (
+        <div className="picker-panel">
+            <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--color-text-secondary))' }}>PICK DATE</span>
+                <button onClick={() => setIsCustom(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'hsl(var(--color-text-primary))' }}><X size={14} /></button>
+            </div>
+            <input
+                type="date"
+                className="input"
+                ref={customDateRef}
+                style={{ background: 'hsl(var(--color-bg-primary))', borderRadius: 'var(--radius-sm)', marginBottom: '0.5rem' }}
+                onKeyDown={(e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter') {
+                        const val = customDateRef.current?.value;
+                        if (val) onSelectDate(val);
+                    }
+                    if (e.key === 'Escape') {
+                        setIsCustom(false);
+                    }
+                }}
+                autoFocus
+            />
+            <button
+                className="btn btn-primary"
+                style={{ width: '100%', fontSize: '0.85rem' }}
+                onClick={() => {
+                    const val = customDateRef.current?.value;
+                    if (val) onSelectDate(val);
+                }}
+            >
+                Apply Date
+            </button>
+        </div>
+    ) : (
+        <div
+            className="picker-panel"
+            ref={containerRef}
+            onKeyDown={handleKeyDown}
+        >
             <div style={{
-                position: 'absolute',
-                zIndex: 10,
-                background: 'hsl(var(--color-bg-secondary))',
-                border: '1px solid hsl(var(--color-text-secondary) / 0.2)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--shadow-md)',
-                padding: '0.5rem',
-                minWidth: '200px',
-                right: 0,
-                top: '100%'
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '0.5rem',
+                padding: '0 0.5rem'
             }}>
-                <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>PICK DATE</span>
-                    <button onClick={() => setIsCustom(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><X size={14} /></button>
-                </div>
-                <input
-                    type="date"
-                    className="input"
-                    style={{ background: 'hsl(var(--color-bg-primary))', borderRadius: 'var(--radius-sm)' }}
-                    onChange={(e) => {
-                        if (e.target.value) onSelectDate(e.target.value);
-                    }}
-                    autoFocus
-                />
-            </div>
-        );
-    }
-
-    return (
-        <>
-            <div style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 9,
-            }} onClick={onCancel} />
-            <div
-                ref={containerRef}
-                tabIndex={0}
-                style={{
-                    position: 'absolute',
-                    zIndex: 10,
-                    outline: 'none', // Hide focus ring on the container
-                    background: 'hsl(var(--color-bg-secondary))',
-                    border: '1px solid hsl(var(--color-text-secondary) / 0.2)',
-                    borderRadius: 'var(--radius-md)',
-                    boxShadow: 'var(--shadow-md)',
-                    padding: '0.5rem',
-                    minWidth: '220px',
-                    right: 0,
-                    top: '100%'
-                }}>
                 <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '0.5rem',
-                    padding: '0 0.5rem'
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: 'hsl(var(--color-text-secondary))',
                 }}>
-                    <div style={{
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        color: 'hsl(var(--color-text-secondary))',
-                    }}>
-                        MIGRATE TO...
-                    </div>
-                    <button onClick={onCancel} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
-                        <X size={14} />
-                    </button>
+                    MIGRATE TO...
                 </div>
-                {options.map((opt, index) => {
-                    const isSelected = selectedIndex === index;
-                    return (
-                        <button
-                            key={opt.isCustom ? 'custom' : opt.date}
-                            onClick={() => opt.isCustom ? setIsCustom(true) : onSelectDate(opt.date!)}
-                            className={`btn ${isSelected ? 'btn-primary' : 'btn-ghost'}`}
-                            style={{
-                                width: '100%',
-                                justifyContent: 'flex-start',
-                                fontSize: '0.9rem',
-                                borderTop: opt.isCustom ? '1px solid hsl(var(--color-text-secondary) / 0.1)' : 'none',
-                                marginTop: opt.isCustom ? '0.25rem' : '0',
-                                backgroundColor: isSelected ? 'hsl(var(--color-accent))' : 'transparent',
-                                color: isSelected ? 'white' : 'inherit'
-                            }}
-                        >
-                            <ArrowRight size={14} /> {opt.label}
-                        </button>
-                    );
-                })}
+                <button onClick={onCancel} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, color: 'hsl(var(--color-text-primary))' }}>
+                    <X size={14} />
+                </button>
             </div>
-        </>
+            {options.map((opt) => (
+                <button
+                    key={opt.isCustom ? 'custom' : opt.date}
+                    onClick={() => opt.isCustom ? setIsCustom(true) : onSelectDate(opt.date!)}
+                    className="btn btn-ghost migrate-option"
+                    style={{
+                        width: '100%',
+                        justifyContent: 'flex-start',
+                        fontSize: '0.9rem',
+                        borderTop: opt.isCustom ? '1px solid hsl(var(--color-text-secondary) / 0.1)' : 'none',
+                        marginTop: opt.isCustom ? '0.25rem' : '0',
+                    }}
+                >
+                    <ArrowRight size={14} /> {opt.label}
+                </button>
+            ))}
+        </div>
+    );
+
+    return createPortal(
+        <div className="picker-overlay" onClick={onCancel}>
+            <div onClick={e => e.stopPropagation()}>
+                {panelContent}
+            </div>
+        </div>,
+        document.body
     );
 }
