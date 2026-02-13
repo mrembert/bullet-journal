@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { type User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -60,10 +61,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 photoURL: null,
             } as unknown as User;
 
-            setUser(mockUser);
-            setIsAuthorized(true);
-            setLoading(false);
-            return;
+            // Use timeout to avoid synchronous setState in effect
+            const timer = setTimeout(() => {
+                setUser(mockUser);
+                setIsAuthorized(true);
+                setLoading(false);
+            }, 0);
+            return () => clearTimeout(timer);
         }
 
         console.log("AuthProvider: Initializing auth listener...");
@@ -80,8 +84,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!auth || !db) {
             console.error("AuthProvider: Firebase not initialized");
-            setLoading(false);
-            return;
+            // Use timeout to avoid synchronous setState in effect
+            const timer = setTimeout(() => setLoading(false), 0);
+            return () => clearTimeout(timer);
         }
 
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -119,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             clearTimeout(timeoutId);
             unsubscribe();
         };
-    }, []);
+    }, [loading]);
 
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();

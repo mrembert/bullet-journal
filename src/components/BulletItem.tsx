@@ -37,11 +37,9 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
     const [editContent, setEditContent] = useState(bullet.content);
 
     // Sync local edit content if bullet content changes while not editing
-    useEffect(() => {
-        if (!isEditing) {
-            setEditContent(bullet.content);
-        }
-    }, [bullet.content, isEditing]);
+    if (!isEditing && editContent !== bullet.content) {
+        setEditContent(bullet.content);
+    }
 
     const handleEdit = () => {
         setEditContent(bullet.content);
@@ -90,7 +88,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
     return (
         <div ref={(node) => {
             // Combine refs
-            (itemRef as any).current = node;
+            if (itemRef) itemRef.current = node;
             if (typeof ref === 'function') ref(node);
             else if (ref) ref.current = node;
         }}>

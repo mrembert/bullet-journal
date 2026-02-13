@@ -17,7 +17,9 @@ export function cleanNoteContent(raw: string, bullets: Record<string, Bullet>): 
     try {
         const parsed = JSON.parse(raw);
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const cleanNodes = (nodes: any[]): any[] => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return nodes.filter((node: any) => {
                 if (node.type === 'embeddedTask' && node.attrs?.bulletId) {
                     return !!bullets[node.attrs.bulletId];

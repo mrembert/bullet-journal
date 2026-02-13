@@ -71,7 +71,7 @@ export function DailyLog() {
         if (dailyBullets.length > 0) {
             setFocusedId(dailyBullets[0].id);
         }
-    }, [date]); // Re-run when date changes
+    }, [date, dailyBullets, setFocusedId]); // Re-run when date changes
 
     return (
         <div className="daily-log">

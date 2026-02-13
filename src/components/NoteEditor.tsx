@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { X, Save, Trash } from 'lucide-react';
@@ -18,9 +18,10 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
     // Use a REF for content — avoids stale closure issues entirely.
     // The editor calls onChange on every keystroke, updating this ref.
     // When we save, we always read the latest value from the ref.
-    const contentRef = useRef(cleanNoteContent(bullet?.longFormContent || '', state.bullets));
-
-    if (!bullet) return null;
+    // Note: We initialize this once.
+    // Use useState for initial value to avoid ref access during render
+    const [initialContent] = useState(() => cleanNoteContent(bullet?.longFormContent || '', state.bullets));
+    const contentRef = useRef(initialContent);
 
     const handleContentChange = (json: string) => {
         contentRef.current = json;
@@ -46,6 +47,7 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
     };
 
     const handleCreateTask = useCallback((initialContent?: string) => {
+        if (!bullet) return '';
         const newId = uuidv4();
         dispatch({
             type: 'ADD_BULLET',
@@ -59,7 +61,9 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
             }
         });
         return newId;
-    }, [dispatch, bullet.date, bullet.collectionId, bulletId]);
+    }, [dispatch, bullet, bulletId]);
+
+    if (!bullet) return null;
 
     return createPortal(
         <div className="note-editor-overlay" style={{
@@ -105,7 +109,7 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
                 <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                     <RichTextEditor
                         key={bulletId}
-                        content={contentRef.current}
+                        content={initialContent}
                         onChange={handleContentChange}
                         onCreateTask={handleCreateTask}
                         onSaveAndClose={handleClose}

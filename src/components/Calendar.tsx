@@ -26,7 +26,7 @@ export function Calendar({ onSelectDate, initialDate }: CalendarProps) {
         if (initialDate) {
             try {
                 return parseISO(initialDate);
-            } catch (e) {
+            } catch {
                 return new Date();
             }
         }

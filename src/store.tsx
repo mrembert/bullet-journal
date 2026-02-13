@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo } from 'react';
 import type { AppState, Action } from './types';
 import { useAuth } from './contexts/AuthContext';
@@ -36,6 +37,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // This intercepts actions, generates IDs if needed, updates local state, AND calls Firestore
     const dispatch = useCallback(async (action: Action) => {
         // Enforce ID generation for creations
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, prefer-const
         let enhancedAction: any = { ...action };
 
         if (action.type === 'ADD_BULLET' && !action.payload.id) {

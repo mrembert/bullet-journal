@@ -9,6 +9,7 @@ const fixedToday = new Date('2023-10-27T00:00:00Z');
 
 const mockDateLib: DateLib = {
     parseISO: (s: string) => new Date(s),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     startOfDay: (d: Date) => {
         // Always return fixed today for consistency in this test context
         return new Date(fixedToday);
@@ -18,6 +19,7 @@ const mockDateLib: DateLib = {
         n.setDate(n.getDate() - amount);
         return n;
     },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     startOfWeek: (d: Date, options?: { weekStartsOn: 1 }) => {
         // Assuming d is fixedToday (Friday)
         // Monday was 4 days ago
@@ -25,6 +27,7 @@ const mockDateLib: DateLib = {
         n.setDate(n.getDate() - 4);
         return n;
     },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     endOfWeek: (d: Date, options?: { weekStartsOn: 1 }) => {
         // Assuming d is fixedToday (Friday)
         // Sunday is 2 days ahead

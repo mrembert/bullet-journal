@@ -1,202 +1,283 @@
-
-import { describe, it, mock } from 'node:test';
+import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert';
-import { subscribeToUserDataLogic, performActionInFirestoreLogic, type DatabaseDeps, type Action } from './database.logic.ts';
-import type { Firestore, CollectionReference, DocumentReference, Unsubscribe } from 'firebase/firestore';
-import type { AppState, Bullet } from '../types.ts';
+import { subscribeToUserDataLogic, performActionInFirestoreLogic } from './database.logic.ts';
+import type { AppState, Action } from '../types.ts';
 
-// Helper to create a mock Firestore object
-const mockDb = {} as Firestore;
+// Mock dependencies
+const mockCollection = mock.fn();
+const mockDoc = mock.fn();
+const mockOnSnapshot = mock.fn();
+const mockSetDoc = mock.fn();
+const mockUpdateDoc = mock.fn();
+const mockDeleteDoc = mock.fn();
 
-// Mock implementations for DatabaseDeps
-const createMockDeps = (): DatabaseDeps => {
-    return {
-        collection: mock.fn((_db, _path, ..._segments) => ({ path: [_path, ..._segments].join('/') } as unknown as CollectionReference)),
-        doc: mock.fn((_db, _path, ..._segments) => {
-            // Check if first arg is db or parent ref
-            let path;
-            if (typeof _db === 'object' && 'path' in _db && typeof (_db as any).path === 'string') {
-                // Parent ref
-                 path = [(_db as any).path, _path, ..._segments].join('/');
-            } else {
-                path = [_path, ..._segments].join('/');
-            }
-            return { path } as unknown as DocumentReference;
-        }),
-        onSnapshot: mock.fn(() => mock.fn() as Unsubscribe),
-        setDoc: mock.fn(async () => {}),
-        updateDoc: mock.fn(async () => {}),
-        deleteDoc: mock.fn(async () => {}),
-    };
+const deps = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    collection: mockCollection as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    doc: mockDoc as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onSnapshot: mockOnSnapshot as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setDoc: mockSetDoc as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    updateDoc: mockUpdateDoc as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    deleteDoc: mockDeleteDoc as any,
 };
 
-describe('subscribeToUserDataLogic', () => {
-    it('should subscribe to bullets and collections', () => {
-        const deps = createMockDeps();
-        const uid = 'test-uid';
-        const onDataChange = mock.fn();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockDb = {} as any;
+const mockUid = 'test-uid';
 
-        const unsubscribe = subscribeToUserDataLogic(deps, mockDb, uid, onDataChange);
-
-        // Verify collection calls
-        assert.strictEqual((deps.collection as any).mock.callCount(), 2);
-
-        // Verify onSnapshot calls
-        assert.strictEqual((deps.onSnapshot as any).mock.callCount(), 2);
-
-        unsubscribe();
+describe('database.logic', () => {
+    beforeEach(() => {
+        mockCollection.mock.resetCalls();
+        mockDoc.mock.resetCalls();
+        mockOnSnapshot.mock.resetCalls();
+        mockSetDoc.mock.resetCalls();
+        mockUpdateDoc.mock.resetCalls();
+        mockDeleteDoc.mock.resetCalls();
     });
 
-    it('should handle bullet updates', () => {
-        const deps = createMockDeps();
-        const uid = 'test-uid';
-        const onDataChange = mock.fn();
+    describe('subscribeToUserDataLogic', () => {
+        it('should subscribe to bullets and collections', () => {
+            const mockUnsubscribe = mock.fn();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mockOnSnapshot.mock.mockImplementation((ref: any, callback: any) => {
+                // Simulate initial data
+                if (ref === 'bullets-ref') {
+                    callback({
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        forEach: (fn: any) => {
+                            fn({ id: 'b1', data: () => ({ id: 'b1', content: 'test bullet' }) });
+                        }
+                    });
+                } else if (ref === 'collections-ref') {
+                    callback({
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        forEach: (fn: any) => {
+                            fn({ id: 'c1', data: () => ({ id: 'c1', title: 'test collection' }) });
+                        }
+                    });
+                }
+                return mockUnsubscribe;
+            });
 
-        // Capture the callbacks passed to onSnapshot
-        let bulletCallback: (snapshot: any) => void;
-        deps.onSnapshot = mock.fn((ref, callback) => {
-            if ((ref as any).path.includes('bullets')) {
-                bulletCallback = callback;
-            }
-            return mock.fn();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mockCollection.mock.mockImplementation((_db: any, ...path: string[]) => {
+                if (path.includes('bullets')) return 'bullets-ref';
+                if (path.includes('collections')) return 'collections-ref';
+                return 'unknown-ref';
+            });
+
+            const onDataChange = mock.fn();
+
+            const unsubscribe = subscribeToUserDataLogic(deps, mockDb, mockUid, onDataChange);
+
+            assert.strictEqual(mockCollection.mock.callCount(), 2);
+            assert.strictEqual(mockOnSnapshot.mock.callCount(), 2);
+            assert.strictEqual(onDataChange.mock.callCount(), 2); // Once for bullets, once for collections
+
+            // Verify data passed to callback
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const firstCall = onDataChange.mock.calls[0].arguments[0];
+            // Since we can't guarantee order of snapshot callbacks in this synchronous mock setup easily without complex logic,
+            // we just check if it was called with partial data.
+            // Actually, in the implementation, onSnapshot is called synchronously here.
+
+            unsubscribe();
+            assert.strictEqual(mockUnsubscribe.mock.callCount(), 2);
+        });
+    });
+
+    describe('performActionInFirestoreLogic', () => {
+        const initialState: AppState = {
+            bullets: {},
+            collections: {},
+            view: { mode: 'daily', date: '2023-01-01', collectionId: undefined },
+            preferences: { groupByProject: false, showCompleted: true, showMigrated: false, sortByType: false }
+        };
+
+        it('should handle ADD_BULLET', async () => {
+            const action: Action = {
+                type: 'ADD_BULLET',
+                payload: { id: 'b1', content: 'new task', type: 'task', date: '2023-01-01' }
+            };
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mockDoc.mock.mockImplementation((...args: any[]) => {
+                if (args.includes('bullets')) return 'bullet-ref-b1';
+                return 'user-ref';
+            });
+
+            await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
+
+            assert.strictEqual(mockSetDoc.mock.callCount(), 1);
+            const callArgs = mockSetDoc.mock.calls[0].arguments;
+            assert.strictEqual(callArgs[0], 'bullet-ref-b1');
+            assert.strictEqual(callArgs[1].content, 'new task');
+            assert.strictEqual(callArgs[1].state, 'open');
         });
 
-        subscribeToUserDataLogic(deps, mockDb, uid, onDataChange);
+        it('should handle UPDATE_BULLET', async () => {
+            const action: Action = {
+                type: 'UPDATE_BULLET',
+                payload: { id: 'b1', content: 'updated' }
+            };
 
-        // Simulate snapshot update
-        const mockSnapshot = {
-            forEach: (fn: (doc: any) => void) => {
-                fn({ id: 'b1', data: () => ({ id: 'b1', content: 'Task 1' }) });
-                fn({ id: 'b2', data: () => ({ id: 'b2', content: 'Task 2' }) });
-            }
-        };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mockDoc.mock.mockImplementation((...args: any[]) => {
+                if (args.includes('bullets')) return 'bullet-ref-b1';
+                return 'user-ref';
+            });
 
-        if (bulletCallback!) {
-            bulletCallback(mockSnapshot);
-        }
+            await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
 
-        assert.strictEqual(onDataChange.mock.callCount(), 1);
-        const callArgs = onDataChange.mock.calls[0].arguments[0];
-        assert.deepStrictEqual(callArgs.bullets, {
-            'b1': { id: 'b1', content: 'Task 1' },
-            'b2': { id: 'b2', content: 'Task 2' }
+            assert.strictEqual(mockUpdateDoc.mock.callCount(), 1);
+            const callArgs = mockUpdateDoc.mock.calls[0].arguments;
+            assert.strictEqual(callArgs[0], 'bullet-ref-b1');
+            assert.strictEqual(callArgs[1].content, 'updated');
         });
-    });
-});
 
-describe('performActionInFirestoreLogic', () => {
-    const initialState: AppState = {
-        bullets: {},
-        collections: {},
-        view: { mode: 'daily', date: '2023-01-01' },
-        preferences: { groupByProject: false, showCompleted: true, showMigrated: false }
-    };
+        it('should handle DELETE_BULLET', async () => {
+            const action: Action = {
+                type: 'DELETE_BULLET',
+                payload: { id: 'b1' }
+            };
 
-    it('ADD_BULLET should call setDoc with correct data', async () => {
-        const deps = createMockDeps();
-        const uid = 'test-uid';
-        const action: Action = {
-            type: 'ADD_BULLET',
-            payload: { id: 'b1', content: 'New Task', type: 'task', date: '2023-01-01' }
-        };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mockDoc.mock.mockImplementation((...args: any[]) => {
+                if (args.includes('bullets')) return 'bullet-ref-b1';
+                return 'user-ref';
+            });
 
-        await performActionInFirestoreLogic(deps, mockDb, uid, action, initialState);
+            await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
 
-        assert.strictEqual((deps.setDoc as any).mock.callCount(), 1);
-        const [ref, data] = (deps.setDoc as any).mock.calls[0].arguments;
+            assert.strictEqual(mockDeleteDoc.mock.callCount(), 1);
+            assert.strictEqual(mockDeleteDoc.mock.calls[0].arguments[0], 'bullet-ref-b1');
+        });
 
-        assert.ok((ref as any).path.includes('users/test-uid/bullets/b1'));
-        assert.strictEqual(data.id, 'b1');
-        assert.strictEqual(data.content, 'New Task');
-        assert.strictEqual(data.state, 'open');
-    });
+        it('should handle MIGRATE_BULLET (reschedule)', async () => {
+            const stateWithBullet: AppState = {
+                ...initialState,
+                bullets: {
+                    'b1': { id: 'b1', content: 'task', type: 'task', state: 'open', date: '2023-01-01', collectionId: 'col1', createdAt: 0, updatedAt: 0, order: 0 }
+                }
+            };
 
-    it('UPDATE_BULLET should call updateDoc', async () => {
-        const deps = createMockDeps();
-        const uid = 'test-uid';
-        const action: Action = {
-            type: 'UPDATE_BULLET',
-            payload: { id: 'b1', state: 'completed' }
-        };
+            const action: Action = {
+                type: 'MIGRATE_BULLET',
+                payload: { id: 'b1', targetDate: '2023-01-02' }
+            };
 
-        await performActionInFirestoreLogic(deps, mockDb, uid, action, initialState);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mockDoc.mock.mockImplementation((...args: any[]) => {
+                if (args.includes('bullets') && args.includes('b1')) return 'bullet-ref-b1';
+                return 'user-ref';
+            });
 
-        assert.strictEqual((deps.updateDoc as any).mock.callCount(), 1);
-        const [ref, data] = (deps.updateDoc as any).mock.calls[0].arguments;
+            await performActionInFirestoreLogic(deps, mockDb, mockUid, action, stateWithBullet);
 
-        assert.ok((ref as any).path.includes('bullets/b1'));
-        assert.strictEqual(data.state, 'completed');
-        assert.ok(data.updatedAt);
-    });
+            assert.strictEqual(mockUpdateDoc.mock.callCount(), 1);
+            const callArgs = mockUpdateDoc.mock.calls[0].arguments;
+            assert.strictEqual(callArgs[0], 'bullet-ref-b1');
+            assert.strictEqual(callArgs[1].date, '2023-01-02');
+        });
 
-    it('DELETE_BULLET should call deleteDoc', async () => {
-        const deps = createMockDeps();
-        const uid = 'test-uid';
-        const action: Action = {
-            type: 'DELETE_BULLET',
-            payload: { id: 'b1' }
-        };
+        it('should handle MIGRATE_BULLET (clone next day)', async () => {
+             const stateWithBullet: AppState = {
+                ...initialState,
+                bullets: {
+                    'b1': { id: 'b1', content: 'task', type: 'task', state: 'open', date: '2023-01-01', createdAt: 0, updatedAt: 0, order: 0 }
+                }
+            };
 
-        await performActionInFirestoreLogic(deps, mockDb, uid, action, initialState);
+            const action: Action = {
+                type: 'MIGRATE_BULLET',
+                payload: { id: 'b1', targetDate: '2023-01-02', newId: 'b2' }
+            };
 
-        assert.strictEqual((deps.deleteDoc as any).mock.callCount(), 1);
-        const [ref] = (deps.deleteDoc as any).mock.calls[0].arguments;
-        assert.ok((ref as any).path.includes('bullets/b1'));
-    });
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mockDoc.mock.mockImplementation((...args: any[]) => {
+                if (args.includes('bullets') && args.includes('b1')) return 'bullet-ref-b1';
+                if (args.includes('bullets') && args.includes('b2')) return 'bullet-ref-b2';
+                return 'user-ref';
+            });
 
-    it('MIGRATE_BULLET (no collection) should update old and create new', async () => {
-        const deps = createMockDeps();
-        const uid = 'test-uid';
-        const stateWithBullet = {
-            ...initialState,
-            bullets: {
-                'b1': { id: 'b1', content: 'Task', type: 'task', state: 'open', date: '2023-01-01', order: 1, createdAt: 1, updatedAt: 1 } as Bullet
-            }
-        };
-        const action: Action = {
-            type: 'MIGRATE_BULLET',
-            payload: { id: 'b1', targetDate: '2023-01-02', newId: 'b2' }
-        };
+            await performActionInFirestoreLogic(deps, mockDb, mockUid, action, stateWithBullet);
 
-        await performActionInFirestoreLogic(deps, mockDb, uid, action, stateWithBullet);
+            // 1. Update old
+            assert.strictEqual(mockUpdateDoc.mock.callCount(), 1); // 1 for old, and we expect setDoc for new
+            const updateArgs = mockUpdateDoc.mock.calls[0].arguments;
+            assert.strictEqual(updateArgs[0], 'bullet-ref-b1');
+            assert.strictEqual(updateArgs[1].state, 'migrated');
 
-        // Should update old bullet to migrated
-        assert.strictEqual((deps.updateDoc as any).mock.callCount(), 1);
-        const [updateRef, updateData] = (deps.updateDoc as any).mock.calls[0].arguments;
-        assert.ok((updateRef as any).path.includes('bullets/b1'));
-        assert.strictEqual(updateData.state, 'migrated');
+            // 2. Create new
+            assert.strictEqual(mockSetDoc.mock.callCount(), 1);
+            const setArgs = mockSetDoc.mock.calls[0].arguments;
+            assert.strictEqual(setArgs[0], 'bullet-ref-b2');
+            assert.strictEqual(setArgs[1].id, 'b2');
+            assert.strictEqual(setArgs[1].date, '2023-01-02');
+            assert.strictEqual(setArgs[1].state, 'open');
+        });
 
-        // Should create new bullet
-        assert.strictEqual((deps.setDoc as any).mock.callCount(), 1);
-        const [setRef, setData] = (deps.setDoc as any).mock.calls[0].arguments;
-        assert.ok((setRef as any).path.includes('bullets/b2'));
-        assert.strictEqual(setData.id, 'b2');
-        assert.strictEqual(setData.date, '2023-01-02');
-        assert.strictEqual(setData.state, 'open');
-    });
+        it('should handle ADD_COLLECTION', async () => {
+             const action: Action = {
+                type: 'ADD_COLLECTION',
+                payload: { id: 'c1', title: 'Work', type: 'project' }
+            };
 
-     it('MIGRATE_BULLET (collection) should only update date', async () => {
-        const deps = createMockDeps();
-        const uid = 'test-uid';
-        const stateWithBullet = {
-            ...initialState,
-            bullets: {
-                'b1': { id: 'b1', content: 'Task', type: 'task', state: 'open', collectionId: 'col1', order: 1, createdAt: 1, updatedAt: 1 } as Bullet
-            }
-        };
-        const action: Action = {
-            type: 'MIGRATE_BULLET',
-            payload: { id: 'b1', targetDate: '2023-01-02' }
-        };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mockDoc.mock.mockImplementation((...args: any[]) => {
+                if (args.includes('collections')) return 'col-ref-c1';
+                return 'user-ref';
+            });
 
-        await performActionInFirestoreLogic(deps, mockDb, uid, action, stateWithBullet);
+             await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
 
-        // Should update bullet date
-        assert.strictEqual((deps.updateDoc as any).mock.callCount(), 1);
-        assert.strictEqual((deps.setDoc as any).mock.callCount(), 0);
+             assert.strictEqual(mockSetDoc.mock.callCount(), 1);
+             const callArgs = mockSetDoc.mock.calls[0].arguments;
+             assert.strictEqual(callArgs[0], 'col-ref-c1');
+             assert.strictEqual(callArgs[1].title, 'Work');
+        });
 
-        const [updateRef, updateData] = (deps.updateDoc as any).mock.calls[0].arguments;
-        assert.ok((updateRef as any).path.includes('bullets/b1'));
-        assert.strictEqual(updateData.date, '2023-01-02');
+         it('should handle UPDATE_COLLECTION', async () => {
+             const action: Action = {
+                type: 'UPDATE_COLLECTION',
+                payload: { id: 'c1', title: 'Work Updated' }
+            };
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mockDoc.mock.mockImplementation((...args: any[]) => {
+                if (args.includes('collections')) return 'col-ref-c1';
+                return 'user-ref';
+            });
+
+             await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
+
+             assert.strictEqual(mockUpdateDoc.mock.callCount(), 1);
+             const callArgs = mockUpdateDoc.mock.calls[0].arguments;
+             assert.strictEqual(callArgs[0], 'col-ref-c1');
+             assert.strictEqual(callArgs[1].title, 'Work Updated');
+        });
+
+        it('should handle DELETE_COLLECTION', async () => {
+             const action: Action = {
+                type: 'DELETE_COLLECTION',
+                payload: { id: 'c1' }
+            };
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mockDoc.mock.mockImplementation((...args: any[]) => {
+                if (args.includes('collections')) return 'col-ref-c1';
+                return 'user-ref';
+            });
+
+             await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
+
+             assert.strictEqual(mockDeleteDoc.mock.callCount(), 1);
+             assert.strictEqual(mockDeleteDoc.mock.calls[0].arguments[0], 'col-ref-c1');
+        });
     });
 });

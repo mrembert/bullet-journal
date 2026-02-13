@@ -31,6 +31,7 @@ export function reducer(state: AppState, action: Action): AppState {
                 order: now,
                 createdAt: now,
                 updatedAt: now,
+                completedAt: undefined // Ensure completedAt is handled
             };
             return {
                 ...state,
@@ -84,6 +85,7 @@ export function reducer(state: AppState, action: Action): AppState {
             return { ...state, collections: newCollections };
         }
         case 'DELETE_BULLET': {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { [action.payload.id]: deleted, ...remainingBullets } = state.bullets;
             return { ...state, bullets: remainingBullets };
         }
@@ -188,6 +190,7 @@ export function reducer(state: AppState, action: Action): AppState {
             };
         }
         case 'DELETE_COLLECTION': {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { [action.payload.id]: deleted, ...remainingCollections } = state.collections;
             return {
                 ...state,

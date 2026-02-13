@@ -4,6 +4,7 @@ import { useStore } from '../../store';
 import { Square, CheckSquare, X } from 'lucide-react';
 import React from 'react';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TaskItemComponent = (props: any) => {
     const { state, dispatch } = useStore();
     const { node, editor, getPos } = props;
@@ -19,7 +20,7 @@ const TaskItemComponent = (props: any) => {
         if (bullet && bullet.content !== localContent) {
             setLocalContent(bullet.content);
         }
-    }, [bullet?.content]);
+    }, [bullet, localContent]);
 
     // Auto-focus newly inserted tasks
     React.useEffect(() => {
@@ -27,7 +28,7 @@ const TaskItemComponent = (props: any) => {
             const timer = setTimeout(() => inputRef.current?.focus(), 50);
             return () => clearTimeout(timer);
         }
-    }, []);
+    }, [node.attrs.autoFocus]);
 
     if (!bullet) {
         return (

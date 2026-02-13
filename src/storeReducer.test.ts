@@ -2,7 +2,7 @@ import test, { describe, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
 import { reducer, initialState } from './storeReducer.ts';
 import type { Action } from './storeReducer.ts';
-import type { AppState, Bullet, BulletType } from './types.ts';
+import type { AppState } from './types.ts';
 
 const FIXED_TIME = 1625097600000; // 2021-07-01T00:00:00.000Z
 

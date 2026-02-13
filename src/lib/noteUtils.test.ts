@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import { cleanNoteContent, isValidUrl } from './noteUtils.ts';
 import type { Bullet } from '../types.ts';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockBullets: Record<string, any> = {
     'bullet-1': { id: 'bullet-1', content: 'Task 1', type: 'task', state: 'open', order: 1, createdAt: 123, updatedAt: 123 },
     'bullet-2': { id: 'bullet-2', content: 'Task 2', type: 'task', state: 'open', order: 2, createdAt: 124, updatedAt: 124 },

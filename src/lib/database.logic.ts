@@ -75,7 +75,7 @@ export async function performActionInFirestoreLogic(
                 }
                 // Clean data to remove undefined values
                 const cleanData = Object.fromEntries(
-                    Object.entries(data).filter(([_, v]) => v !== undefined)
+                    Object.entries(data).filter(([, v]) => v !== undefined)
                 );
 
                 const bulletRef = deps.doc(usersRef, 'bullets', id);
@@ -92,7 +92,7 @@ export async function performActionInFirestoreLogic(
             case 'UPDATE_BULLET': {
                 const ref = deps.doc(usersRef, 'bullets', action.payload.id);
                 const updates = Object.fromEntries(
-                    Object.entries(action.payload).filter(([_, v]) => v !== undefined)
+                    Object.entries(action.payload).filter(([, v]) => v !== undefined)
                 );
                 await deps.updateDoc(ref, { ...updates, updatedAt: Date.now() });
                 break;
@@ -161,7 +161,7 @@ export async function performActionInFirestoreLogic(
             case 'UPDATE_COLLECTION': {
                 const ref = deps.doc(usersRef, 'collections', action.payload.id);
                 const updates = Object.fromEntries(
-                    Object.entries(action.payload).filter(([_, v]) => v !== undefined)
+                    Object.entries(action.payload).filter(([, v]) => v !== undefined)
                 );
                 await deps.updateDoc(ref, updates);
                 break;

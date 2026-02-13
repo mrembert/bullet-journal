@@ -18,7 +18,8 @@ export function SearchView() {
             if (typeof json !== 'object' || !json) return content;
 
             let text = '';
-            const traverse = (node: any) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const traverse = (node: { text?: string; content?: any[] }) => {
                 if (node.text) {
                     text += node.text + ' ';
                 }
@@ -29,7 +30,7 @@ export function SearchView() {
 
             traverse(json);
             return text.trim();
-        } catch (e) {
+        } catch {
             // Not JSON, return as is
             return content;
         }
@@ -59,7 +60,8 @@ export function SearchView() {
         };
 
         allResults.forEach(bullet => {
-            if (grouped[bullet.type]) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if ((grouped as any)[bullet.type]) {
                 grouped[bullet.type].push(bullet);
             }
         });
