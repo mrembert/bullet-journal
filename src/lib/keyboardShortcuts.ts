@@ -26,6 +26,8 @@ export interface KeyboardShortcutContext {
 // Partial KeyboardEvent interface for testing
 export interface KeyboardEventLike {
     key: string;
+    ctrlKey: boolean;
+    metaKey: boolean;
     preventDefault: () => void;
 }
 
@@ -45,6 +47,13 @@ export function handleKeyboardShortcut(
     if (isInput) return;
 
     const key = e.key.toLowerCase();
+
+    // Global Undo
+    if ((e.ctrlKey || e.metaKey) && key === 'z') {
+        e.preventDefault();
+        dispatch({ type: 'UNDO' });
+        return;
+    }
 
     // 1. Navigation
     if (key === 'j' || e.key === 'ArrowDown') {
