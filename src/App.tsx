@@ -20,6 +20,7 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { MigrationPicker } from './components/MigrationPicker';
 import { ProjectPicker } from './components/ProjectPicker';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
+import { ExportDialog } from './components/ExportDialog';
 import { Keyboard } from 'lucide-react';
 import {
   DndContext,
@@ -50,6 +51,7 @@ function App() {
   const [migratingBulletId, setMigratingBulletId] = useState<string | null>(null);
   const [movingBulletId, setMovingBulletId] = useState<string | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   const closeSidebar = () => setSidebarOpen(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -168,17 +170,6 @@ function App() {
       setNewCollectionTitle('');
       setIsCreatingCollection(false);
     }
-  };
-
-  const handleExport = () => {
-    const dataStr = JSON.stringify(state, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `bujo-backup-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -402,7 +393,7 @@ function App() {
 
         <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)' }}>
           <input type="file" ref={fileInputRef} onChange={handleImport} style={{ display: 'none' }} accept=".json" />
-          <button onClick={handleExport} className="btn btn-ghost" style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}>
+          <button onClick={() => setShowExportDialog(true)} className="btn btn-ghost" style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}>
             <Download size={16} /> Export Backup
           </button>
           <button onClick={() => fileInputRef.current?.click()} className="btn btn-ghost" style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}>
@@ -490,6 +481,10 @@ function App() {
 
       {showShortcuts && (
         <ShortcutsOverlay onClose={() => setShowShortcuts(false)} />
+      )}
+
+      {showExportDialog && (
+        <ExportDialog onClose={() => setShowExportDialog(false)} />
       )}
     </div>
   );
