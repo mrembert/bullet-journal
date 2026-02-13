@@ -5,7 +5,8 @@ import {
     onSnapshot,
     setDoc,
     deleteDoc,
-    updateDoc
+    updateDoc,
+    writeBatch
 } from 'firebase/firestore';
 import type { AppState, Action } from '../types';
 import { subscribeToUserDataLogic, performActionInFirestoreLogic, type DatabaseDeps } from './database.logic';
@@ -16,7 +17,8 @@ const deps: DatabaseDeps = {
     onSnapshot,
     setDoc,
     deleteDoc,
-    updateDoc
+    updateDoc,
+    writeBatch
 };
 
 export function subscribeToUserData(uid: string, onDataChange: (data: Partial<AppState>) => void) {

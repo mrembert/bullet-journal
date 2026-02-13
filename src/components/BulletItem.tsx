@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
-import { Trash, FileText, FolderInput, Calendar, MoreVertical, Edit2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Trash, FileText, FolderInput, Calendar, MoreVertical, Edit2, Repeat, CheckCircle } from 'lucide-react';
 import type { Bullet } from '../types';
 import { useStore } from '../store';
 import { BulletIcon } from './BulletIcon';
@@ -9,6 +10,7 @@ import { useNoteEditor } from '../contexts/NoteEditorContext';
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
 import { format, parseISO } from 'date-fns';
+import { useToast } from '../contexts/ToastContext';
 
 interface BulletItemProps {
     bullet: Bullet;
@@ -21,6 +23,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showProjectPicker, setShowProjectPicker] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [showRecurringDeleteConfirm, setShowRecurringDeleteConfirm] = useState(false);
 
     // Notify parent of menu state changes for stacking context management
     useEffect(() => {
@@ -29,6 +32,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
     const { openNote } = useNoteEditor();
     const { requestConfirmation } = useConfirmation();
     const { editingId, setEditingId } = useKeyboardFocus();
+    const { showToast } = useToast();
 
     const collection = bullet.collectionId ? state.collections[bullet.collectionId] : null;
     const showCollectionTag = collection && state.view.collectionId !== bullet.collectionId;
@@ -72,9 +76,73 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
         setShowDatePicker(false);
     };
 
+    const handleUpdateFuture = () => {
+        if (!bullet.recurringId) return;
+
+        const futureBullets = Object.values(state.bullets).filter(b =>
+            b.recurringId === bullet.recurringId &&
+            b.id !== bullet.id &&
+            b.date && bullet.date && b.date > bullet.date
+        );
+
+        if (futureBullets.length === 0) {
+            showToast("No future events found.");
+            setMenuOpen(false);
+            return;
+        }
+
+        const ids = futureBullets.map(b => b.id);
+        dispatch({
+            type: 'UPDATE_BULLETS',
+            payload: {
+                ids,
+                updates: {
+                    content: bullet.content,
+                    type: bullet.type,
+                    longFormContent: bullet.longFormContent
+                }
+            }
+        });
+        showToast(`Updated ${ids.length} future events.`);
+        setMenuOpen(false);
+    };
+
+    const handleDeleteClick = () => {
+        if (bullet.recurringId) {
+            setShowRecurringDeleteConfirm(true);
+            setMenuOpen(false);
+        } else {
+            requestConfirmation({
+                title: 'Delete Item',
+                message: 'Delete this item?',
+                isDanger: true,
+                confirmLabel: 'Delete',
+                onConfirm: () => dispatch({ type: 'DELETE_BULLET', payload: { id: bullet.id } })
+            });
+            setMenuOpen(false);
+        }
+    };
+
+    const handleDeleteRecurring = (scope: 'this' | 'future') => {
+        if (scope === 'this') {
+            dispatch({ type: 'DELETE_BULLET', payload: { id: bullet.id } });
+        } else {
+            // Future includes THIS one
+            const futureBullets = Object.values(state.bullets).filter(b =>
+                b.recurringId === bullet.recurringId &&
+                b.date && bullet.date && b.date >= bullet.date
+            );
+            const ids = futureBullets.map(b => b.id);
+            dispatch({ type: 'DELETE_BULLETS', payload: { ids } });
+            showToast(`Deleted ${ids.length} events.`);
+        }
+        setShowRecurringDeleteConfirm(false);
+    };
+
     const isCompleted = bullet.state === 'completed';
     const isMigrated = bullet.state === 'migrated';
     const hasNote = !!bullet.longFormContent;
+    const isRecurring = !!bullet.recurringId;
 
     const itemRef = useRef<HTMLDivElement>(null);
 
@@ -158,6 +226,9 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                         />
                     ) : (
                         bullet.content
+                    )}
+                    {isRecurring && (
+                        <Repeat size={12} className="text-secondary" style={{ opacity: 0.5 }} title="Recurring Event" />
                     )}
                     {showCollectionTag && (
                         <span style={{
@@ -280,6 +351,17 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                     <Edit2 size={14} /> Edit Text
                                 </button>
 
+                                {/* Recurring Actions */}
+                                {isRecurring && (
+                                    <button
+                                        onClick={handleUpdateFuture}
+                                        className="btn btn-ghost"
+                                        style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
+                                    >
+                                        <Repeat size={14} /> Update Future Events
+                                    </button>
+                                )}
+
                                 {/* Project Picker */}
                                 <button
                                     onClick={() => setShowProjectPicker(!showProjectPicker)}
@@ -321,16 +403,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
 
                                 {/* Delete */}
                                 <button
-                                    onClick={() => {
-                                        requestConfirmation({
-                                            title: 'Delete Item',
-                                            message: 'Delete this item?',
-                                            isDanger: true,
-                                            confirmLabel: 'Delete',
-                                            onConfirm: () => dispatch({ type: 'DELETE_BULLET', payload: { id: bullet.id } })
-                                        });
-                                        setMenuOpen(false);
-                                    }}
+                                    onClick={handleDeleteClick}
                                     className="btn btn-ghost"
                                     style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem', color: 'hsl(var(--color-danger))', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)', marginTop: '0.25rem' }}
                                 >
@@ -341,6 +414,61 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                     )}
                 </div>
             </div>
+
+            {/* Recurring Delete Confirmation Modal */}
+            {showRecurringDeleteConfirm && createPortal(
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2000
+                }}>
+                    <div style={{
+                        backgroundColor: 'hsl(var(--color-bg-secondary))',
+                        padding: '1.5rem',
+                        borderRadius: 'var(--radius-lg)',
+                        maxWidth: '400px',
+                        width: '90%',
+                        boxShadow: 'var(--shadow-lg)',
+                        border: '1px solid hsl(var(--color-text-secondary) / 0.1)'
+                    }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>Delete Recurring Event</h3>
+                        <p style={{ color: 'hsl(var(--color-text-secondary))', marginBottom: '1.5rem' }}>
+                            This is a recurring event. Do you want to delete only this instance, or this and all future instances?
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <button
+                                onClick={() => handleDeleteRecurring('this')}
+                                className="btn btn-ghost"
+                                style={{ justifyContent: 'center', border: '1px solid hsl(var(--color-border))' }}
+                            >
+                                Delete Only This Instance
+                            </button>
+                            <button
+                                onClick={() => handleDeleteRecurring('future')}
+                                className="btn btn-danger"
+                                style={{ justifyContent: 'center', backgroundColor: 'hsl(var(--color-danger))', color: 'white' }}
+                            >
+                                Delete This and Future Instances
+                            </button>
+                            <button
+                                onClick={() => setShowRecurringDeleteConfirm(false)}
+                                className="btn btn-ghost"
+                                style={{ justifyContent: 'center', marginTop: '0.5rem' }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 });

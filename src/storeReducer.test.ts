@@ -2,7 +2,7 @@ import test, { describe, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
 import { reducer, initialState } from './storeReducer.ts';
 import type { Action } from './storeReducer.ts';
-import type { AppState } from './types.ts';
+import type { AppState, Bullet } from './types.ts';
 
 const FIXED_TIME = 1625097600000; // 2021-07-01T00:00:00.000Z
 
@@ -367,5 +367,51 @@ describe('storeReducer', () => {
     test('UNDO returns state as is', () => {
         const state = reducer(initialState, { type: 'UNDO' });
         assert.strictEqual(state, initialState);
+    });
+
+    test('ADD_BULLETS adds multiple bullets', () => {
+        const bullets: Bullet[] = [
+            { id: 'b1', content: '1', type: 'task', state: 'open', order: 1, createdAt: 1, updatedAt: 1 },
+            { id: 'b2', content: '2', type: 'task', state: 'open', order: 2, createdAt: 1, updatedAt: 1 }
+        ];
+        const action: Action = { type: 'ADD_BULLETS', payload: { bullets } };
+        const state = reducer(initialState, action);
+        assert.ok(state.bullets['b1']);
+        assert.ok(state.bullets['b2']);
+        assert.strictEqual(state.bullets['b1'].content, '1');
+    });
+
+    test('UPDATE_BULLETS updates multiple bullets', () => {
+        const startState: AppState = {
+            ...initialState,
+            bullets: {
+                'b1': { id: 'b1', content: '1', type: 'task', state: 'open', order: 1, createdAt: 1, updatedAt: 1 },
+                'b2': { id: 'b2', content: '2', type: 'task', state: 'open', order: 2, createdAt: 1, updatedAt: 1 }
+            }
+        };
+        const action: Action = {
+            type: 'UPDATE_BULLETS',
+            payload: { ids: ['b1', 'b2'], updates: { content: 'Updated' } }
+        };
+        const state = reducer(startState, action);
+        assert.strictEqual(state.bullets['b1'].content, 'Updated');
+        assert.strictEqual(state.bullets['b2'].content, 'Updated');
+        assert.strictEqual(state.bullets['b1'].updatedAt, FIXED_TIME);
+    });
+
+    test('DELETE_BULLETS removes multiple bullets', () => {
+        const startState: AppState = {
+            ...initialState,
+            bullets: {
+                'b1': { id: 'b1', content: '1', type: 'task', state: 'open', order: 1, createdAt: 1, updatedAt: 1 },
+                'b2': { id: 'b2', content: '2', type: 'task', state: 'open', order: 2, createdAt: 1, updatedAt: 1 },
+                'b3': { id: 'b3', content: '3', type: 'task', state: 'open', order: 3, createdAt: 1, updatedAt: 1 }
+            }
+        };
+        const action: Action = { type: 'DELETE_BULLETS', payload: { ids: ['b1', 'b2'] } };
+        const state = reducer(startState, action);
+        assert.strictEqual(state.bullets['b1'], undefined);
+        assert.strictEqual(state.bullets['b2'], undefined);
+        assert.ok(state.bullets['b3']);
     });
 });

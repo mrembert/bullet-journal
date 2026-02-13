@@ -6,7 +6,8 @@ import type {
     onSnapshot,
     setDoc,
     deleteDoc,
-    updateDoc
+    updateDoc,
+    writeBatch
 } from 'firebase/firestore';
 import type { AppState, Bullet, Collection, Action } from '../types';
 
@@ -17,6 +18,7 @@ export interface DatabaseDeps {
     setDoc: typeof setDoc;
     updateDoc: typeof updateDoc;
     deleteDoc: typeof deleteDoc;
+    writeBatch: typeof writeBatch;
 }
 
 export function subscribeToUserDataLogic(
@@ -89,6 +91,18 @@ export async function performActionInFirestoreLogic(
                 });
                 break;
             }
+            case 'ADD_BULLETS': {
+                const batch = deps.writeBatch(db);
+                action.payload.bullets.forEach(bullet => {
+                    const bulletRef = deps.doc(usersRef, 'bullets', bullet.id);
+                    const cleanData = Object.fromEntries(
+                        Object.entries(bullet).filter(([, v]) => v !== undefined)
+                    );
+                    batch.set(bulletRef, cleanData);
+                });
+                await batch.commit();
+                break;
+            }
             case 'UPDATE_BULLET': {
                 const ref = deps.doc(usersRef, 'bullets', action.payload.id);
                 const updates = Object.fromEntries(
@@ -97,8 +111,31 @@ export async function performActionInFirestoreLogic(
                 await deps.updateDoc(ref, { ...updates, updatedAt: Date.now() });
                 break;
             }
+            case 'UPDATE_BULLETS': {
+                const batch = deps.writeBatch(db);
+                const now = Date.now();
+                action.payload.ids.forEach(id => {
+                    const ref = deps.doc(usersRef, 'bullets', id);
+                    const updates = { ...action.payload.updates, updatedAt: now };
+                    const cleanUpdates = Object.fromEntries(
+                        Object.entries(updates).filter(([, v]) => v !== undefined)
+                    );
+                    batch.update(ref, cleanUpdates);
+                });
+                await batch.commit();
+                break;
+            }
             case 'DELETE_BULLET': {
                 await deps.deleteDoc(deps.doc(usersRef, 'bullets', action.payload.id));
+                break;
+            }
+            case 'DELETE_BULLETS': {
+                const batch = deps.writeBatch(db);
+                action.payload.ids.forEach(id => {
+                    const ref = deps.doc(usersRef, 'bullets', id);
+                    batch.delete(ref);
+                });
+                await batch.commit();
                 break;
             }
             case 'RESTORE_BULLET': {
