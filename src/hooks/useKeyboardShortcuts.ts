@@ -38,6 +38,10 @@ export function useKeyboardShortcuts({
         const handleKeyDown = (e: KeyboardEvent) => {
             const activeTag = document.activeElement?.tagName.toLowerCase();
             const isInput = activeTag === 'input' || activeTag === 'textarea' || (document.activeElement as HTMLElement)?.isContentEditable || false;
+            
+            // Don't trigger shortcuts if any overlay modal is open (migrating or moving)
+            const isModalOpen = !!document.querySelector('.picker-overlay') || !!document.querySelector('.sidebar-overlay.visible');
+            if (isModalOpen) return;
 
             handleKeyboardShortcut(e, {
                 state: stateRef.current,

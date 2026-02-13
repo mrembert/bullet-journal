@@ -1,0 +1,11 @@
+{
+    "displayName": "GitHub Actions Provider",
+    "attributeMapping": {
+        "google.subject": "assertion.sub",
+        "attribute.actor": "assertion.actor",
+        "attribute.repository": "assertion.repository"
+    },
+    "oidc": {
+        "issuerUri": "https://token.actions.githubusercontent.com"
+    }
+}

@@ -224,9 +224,13 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                 {/* Three-dot kebab menu */}
                 <div style={{ position: 'relative' }}>
                     <button
-                        onClick={() => setMenuOpen(!menuOpen)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setMenuOpen(!menuOpen);
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
                         className="btn btn-ghost bullet-menu-btn"
-                        style={{ padding: '0.25rem', height: 'auto', color: 'hsl(var(--color-text-secondary))', opacity: 0.5 }}
+                        style={{ padding: '0.25rem', height: 'auto', color: 'hsl(var(--color-text-secondary))', opacity: 0.5, zIndex: 2 }}
                         title="Actions"
                     >
                         <MoreVertical size={16} />

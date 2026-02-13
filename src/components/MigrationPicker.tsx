@@ -15,6 +15,14 @@ export function MigrationPicker({ onSelectDate, onCancel }: MigrationPickerProps
     const monthAfterNext = addMonths(nextMonth, 1);
     const [isCustom, setIsCustom] = React.useState(false);
     const [selectedIndex, setSelectedIndex] = React.useState(0);
+    const containerRef = React.useRef<HTMLDivElement>(null);
+
+    // Initial focus to capture keyboard events
+    React.useEffect(() => {
+        if (!isCustom) {
+            containerRef.current?.focus();
+        }
+    }, [isCustom]);
 
     const options = [
         { label: 'Tomorrow', date: format(addDays(today, 1), 'yyyy-MM-dd') },
@@ -98,18 +106,22 @@ export function MigrationPicker({ onSelectDate, onCancel }: MigrationPickerProps
                 bottom: 0,
                 zIndex: 9,
             }} onClick={onCancel} />
-            <div style={{
-                position: 'absolute',
-                zIndex: 10,
-                background: 'hsl(var(--color-bg-secondary))',
-                border: '1px solid hsl(var(--color-text-secondary) / 0.2)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--shadow-md)',
-                padding: '0.5rem',
-                minWidth: '220px',
-                right: 0,
-                top: '100%'
-            }}>
+            <div
+                ref={containerRef}
+                tabIndex={0}
+                style={{
+                    position: 'absolute',
+                    zIndex: 10,
+                    outline: 'none', // Hide focus ring on the container
+                    background: 'hsl(var(--color-bg-secondary))',
+                    border: '1px solid hsl(var(--color-text-secondary) / 0.2)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-md)',
+                    padding: '0.5rem',
+                    minWidth: '220px',
+                    right: 0,
+                    top: '100%'
+                }}>
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',

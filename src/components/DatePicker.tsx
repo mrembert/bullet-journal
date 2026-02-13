@@ -38,14 +38,28 @@ export function DatePicker({ currentDate, onSelectDate, onCancel }: DatePickerPr
             <input
                 type="date"
                 className="input"
+                id="custom-date-field"
                 defaultValue={currentDate || ''}
-                style={{ background: 'hsl(var(--color-bg-primary))', borderRadius: 'var(--radius-sm)' }}
-                onChange={(e) => {
-                    if (e.target.value) onSelectDate(e.target.value);
+                style={{ background: 'hsl(var(--color-bg-primary))', borderRadius: 'var(--radius-sm)', marginBottom: '0.5rem' }}
+                onKeyDown={(e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter') {
+                        const val = (document.getElementById('custom-date-field') as HTMLInputElement).value;
+                        if (val) onSelectDate(val);
+                    }
                 }}
                 autoFocus
-                onKeyDown={(e) => e.stopPropagation()}
             />
+            <button
+                className="btn btn-primary"
+                style={{ width: '100%', fontSize: '0.85rem' }}
+                onClick={() => {
+                    const val = (document.getElementById('custom-date-field') as HTMLInputElement).value;
+                    if (val) onSelectDate(val);
+                }}
+            >
+                Apply Date
+            </button>
         </div>
     ) : (
         <div

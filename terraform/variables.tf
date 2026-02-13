@@ -17,7 +17,7 @@ variable "image_tag" {
 variable "service_name" {
   description = "The name of the Cloud Run service"
   type        = string
-  default     = "bullet-journal-app"
+  default     = "bullet-journal"
 }
 
 variable "repository_name" {
