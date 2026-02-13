@@ -13,13 +13,19 @@ import { format, parseISO } from 'date-fns';
 interface BulletItemProps {
     bullet: Bullet;
     isFocused?: boolean;
+    onMenuOpenChange?: (open: boolean) => void;
 }
 
-export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet, isFocused }, ref) => {
+export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet, isFocused, onMenuOpenChange }, ref) => {
     const { state, dispatch } = useStore();
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showProjectPicker, setShowProjectPicker] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+
+    // Notify parent of menu state changes for stacking context management
+    useEffect(() => {
+        onMenuOpenChange?.(menuOpen);
+    }, [menuOpen, onMenuOpenChange]);
     const { openNote } = useNoteEditor();
     const { requestConfirmation } = useConfirmation();
     const { editingId, setEditingId } = useKeyboardFocus();
@@ -101,6 +107,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                     textDecoration: isCompleted ? 'line-through' : 'none',
                     color: isCompleted || isMigrated ? 'hsl(var(--color-text-secondary))' : 'inherit',
                     position: 'relative',
+                    zIndex: menuOpen ? 100 : (isFocused ? 1 : 'auto'),
                     transition: 'background-color 0.15s ease, border-color 0.15s ease',
                     borderLeft: isFocused ? '3px solid hsl(var(--color-accent))' : '3px solid transparent',
                     backgroundColor: isFocused ? 'hsl(var(--color-accent) / 0.05)' : 'transparent',
@@ -239,6 +246,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                     {menuOpen && (
                         <>
                             <div
+                                className="bullet-menu-overlay"
                                 style={{ position: 'fixed', inset: 0, zIndex: 9 }}
                                 onClick={() => { setMenuOpen(false); setShowDatePicker(false); setShowProjectPicker(false); }}
                             />
