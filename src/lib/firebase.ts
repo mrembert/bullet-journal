@@ -1,6 +1,6 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { type FirebaseApp, initializeApp } from "firebase/app";
+import { type Auth, getAuth } from "firebase/auth";
+import { type Firestore, getFirestore } from "firebase/firestore";
 
 // TODO: Replace with your actual config or use environment variables
 const firebaseConfig = {
@@ -14,9 +14,9 @@ const firebaseConfig = {
 
 console.log("Firebase: Starting initialization script...");
 
-let app;
-let auth;
-let db;
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let db: Firestore | undefined;
 
 try {
     console.log("Firebase: Calling initializeApp...");

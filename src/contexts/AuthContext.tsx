@@ -78,11 +78,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         }, 5000);
 
+        if (!auth || !db) {
+            console.error("AuthProvider: Firebase not initialized");
+            setLoading(false);
+            return;
+        }
+
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             console.log("AuthProvider: Auth state changed");
             if (currentUser) {
                 try {
-                    const emailRef = doc(db, 'allowed_users', currentUser.email!);
+                    const emailRef = doc(db!, 'allowed_users', currentUser.email!);
                     console.log("AuthProvider: Checking authorization...");
                     const emailDoc = await getDoc(emailRef);
 
@@ -117,6 +123,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
+        if (!auth) {
+            console.error("AuthProvider: Auth not initialized");
+            return;
+        }
         try {
             await signInWithPopup(auth, provider);
         } catch (error) {
@@ -125,6 +135,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const logout = async () => {
+        if (!auth) {
+            console.error("AuthProvider: Auth not initialized");
+            return;
+        }
         try {
             await signOut(auth);
         } catch (error) {
