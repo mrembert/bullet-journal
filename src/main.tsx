@@ -8,6 +8,8 @@ import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { NoteEditorProvider } from './contexts/NoteEditorContext.tsx'
 import { ConfirmationProvider } from './contexts/ConfirmationContext.tsx'
 
+console.log("Main: Initializing bundle...");
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
