@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RecurrenceConfig, RecurrenceFrequency } from '../lib/recurrence';
-import { getDay, getDate, startOfMonth } from 'date-fns';
-import { ChevronDown, RefreshCw, X } from 'lucide-react';
+import { getDay, getDate } from 'date-fns';
+import { X } from 'lucide-react';
 
 interface RecurrencePickerProps {
     startDate: Date;
@@ -45,7 +45,7 @@ export function RecurrencePicker({ startDate, initialConfig, onChange, onClose }
     const [monthlyType, setMonthlyType] = useState<'date' | 'relative'>('date');
     const [monthWeek, setMonthWeek] = useState(initialConfig?.monthWeek || defaultMonthWeek);
     const [monthWeekDay, setMonthWeekDay] = useState(initialConfig?.monthWeekDay ?? defaultWeekDay);
-    const [monthDay, setMonthDay] = useState(initialConfig?.monthDay || defaultMonthDay);
+    const [monthDay] = useState(initialConfig?.monthDay || defaultMonthDay);
 
     useEffect(() => {
         // Sync internal state if needed when startDate changes

@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../store';
 import type { BulletType, Bullet } from '../types';
 import { generateUUID } from '../lib/utils';
 import { ProjectPicker } from './ProjectPicker';
 import { RecurrencePicker } from './RecurrencePicker';
 import { generateRecurringDates, type RecurrenceConfig } from '../lib/recurrence';
-import { Folder, Repeat, X } from 'lucide-react';
+import { Folder, Repeat } from 'lucide-react';
 import { parseISO } from 'date-fns';
 
 export function BulletEditor({ defaultDate, autoFocus = false }: { defaultDate?: string, autoFocus?: boolean }) {
