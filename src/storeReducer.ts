@@ -1,4 +1,4 @@
-import type { AppState, Bullet, Action } from './types';
+import type { AppState, Bullet, Action, BulletState } from './types';
 import { generateUUID, getTodayDate } from './lib/utils.ts';
 
 
@@ -112,12 +112,12 @@ export function reducer(state: AppState, action: Action): AppState {
 
             const nextBullets = {
                 ...state.bullets,
-                [oldBullet.id]: { ...oldBullet, state: 'migrated', updatedAt: now },
+                [oldBullet.id]: { ...oldBullet, state: 'migrated' as BulletState, updatedAt: now },
                 [newId]: {
                     ...oldBullet,
                     id: newId,
                     date: action.payload.targetDate,
-                    state: 'open',
+                    state: 'open' as BulletState,
                     order: now,
                     createdAt: now,
                     updatedAt: now,
