@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { addDays, addMonths, startOfMonth, format } from 'date-fns';
+import { addDays, addMonths, startOfMonth, format, addWeeks, startOfWeek } from 'date-fns';
 import { ArrowRight, X, Calendar as CalendarIcon, Keyboard } from 'lucide-react';
 import { usePopupNavigation } from '../hooks/usePopupNavigation';
 import { Calendar } from './Calendar';
@@ -12,7 +12,7 @@ interface MigrationPickerProps {
 
 export function MigrationPicker({ onSelectDate, onCancel }: MigrationPickerProps) {
     const today = new Date();
-    const nextWeek = addDays(today, 7);
+    const nextWeek = startOfWeek(addWeeks(today, 1), { weekStartsOn: 1 });
     const nextMonth = startOfMonth(addMonths(today, 1));
     const monthAfterNext = addMonths(nextMonth, 1);
     const [isCustom, setIsCustom] = React.useState(false);
