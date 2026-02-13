@@ -40,6 +40,7 @@ import { SortableProjectItem } from './components/SortableProjectItem';
 import './App.css';
 
 function App() {
+  console.log("App: Component executing...");
   const { user, loading, isAuthorized } = useAuth();
   const { state, dispatch } = useStore();
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);

@@ -12,22 +12,39 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-console.log("Firebase: Initializing app...");
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+console.log("Firebase: Starting initialization script...");
 
-// Diagnostic log for config (will help verify if vars reached the build)
-const hasKey = !!firebaseConfig.apiKey;
-console.log("Firebase: Initialization check - Auth key present: " + hasKey);
+let app;
+let auth;
+let db;
 
-// Development Environment Setup - Removed top-level await for stability
-if (import.meta.env.VITE_USE_EMULATOR === 'true') {
-    console.log("🔥 Emulator mode requested...");
-    // In a real app we might use conditional imports here, but let's keep it simple for now
-    // and just not use top-level await which can hang some environments.
+try {
+    console.log("Firebase: Calling initializeApp...");
+    app = initializeApp(firebaseConfig);
+    console.log("Firebase: initializeApp success");
+
+    console.log("Firebase: Calling getAuth...");
+    auth = getAuth(app);
+    console.log("Firebase: getAuth success");
+
+    console.log("Firebase: Calling getFirestore...");
+    db = getFirestore(app);
+    console.log("Firebase: getFirestore success");
+} catch (error) {
+    console.error("Firebase: CRITICAL INITIALIZATION ERROR:", error);
 }
 
-console.log("Firebase: Exporting auth and db");
+// Exporting them (they might be undefined if we hit the catch)
+export { auth, db };
+
+// Diagnostic log for config
+const keyStatus = firebaseConfig.apiKey ? "Present" : "MISSING";
+console.log("Firebase: Auth key status: " + keyStatus);
+
+if (import.meta.env.VITE_USE_EMULATOR === 'true') {
+    console.log("🔥 Emulator mode requested (skipping for safety in production)");
+}
+
+console.log("Firebase: Script execution finished");
 
 export default app;
