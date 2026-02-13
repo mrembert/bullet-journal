@@ -54,13 +54,6 @@ jobs:
             -backend-config="bucket=${{ secrets.TF_STATE_BUCKET_NAME }}" \
             -backend-config="prefix=terraform/state"
 
-      - name: Temporary State Cleanup (Delete old region references)
-        working-directory: terraform
-        run: |
-          terraform state rm google_cloud_run_service.default || true
-          terraform state rm google_cloud_run_service_iam_policy.noauth || true
-          terraform state rm google_artifact_registry_repository.default || true
-
       - name: Terraform Apply (Infra - Registry)
         working-directory: terraform
         env:
