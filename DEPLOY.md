@@ -27,8 +27,8 @@ Terraform needs a remote backend to store the state of your infrastructure. We'l
 2.  Create the bucket:
 
 ```bash
-export BUCKET_NAME="your-unique-bucket-name"
-export LOCATION="us-central1" # Or your preferred region
+export BUCKET_NAME="bullet-journal-tf-state"
+export LOCATION="us-east1" # Or your preferred region
 
 gcloud storage buckets create gs://$BUCKET_NAME --location=$LOCATION
 ```
@@ -46,11 +46,11 @@ Workload Identity Federation allows GitHub Actions to authenticate to Google Clo
 1.  **Set environment variables:**
 
 ```bash
-export PROJECT_ID="your-project-id"
+export PROJECT_ID="bullet-journal-487001"
 export POOL_NAME="github-actions-pool"
 export PROVIDER_NAME="github-actions-provider"
 export SA_NAME="github-deploy-sa"
-export REPO="your-github-username/bullet-journal" # format: owner/repo
+export REPO="mrembert/bullet-journal" # format: owner/repo
 ```
 
 2.  **Create the Workload Identity Pool:**
