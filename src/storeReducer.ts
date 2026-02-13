@@ -110,21 +110,39 @@ export function reducer(state: AppState, action: Action): AppState {
             const newId = action.payload.newId || generateUUID();
             const now = Date.now();
 
+            const nextBullets = {
+                ...state.bullets,
+                [oldBullet.id]: { ...oldBullet, state: 'migrated', updatedAt: now },
+                [newId]: {
+                    ...oldBullet,
+                    id: newId,
+                    date: action.payload.targetDate,
+                    state: 'open',
+                    order: now,
+                    createdAt: now,
+                    updatedAt: now,
+                },
+            };
+
+            // If it came from a note, update the note's content to point to the new ID
+            if (oldBullet.parentNoteId && state.bullets[oldBullet.parentNoteId]) {
+                const parentNote = state.bullets[oldBullet.parentNoteId];
+                if (parentNote.longFormContent) {
+                    const oldStr = `"bulletId":"${oldBullet.id}"`;
+                    const newStr = `"bulletId":"${newId}"`;
+                    // Use a regex with global flag to replace all occurrences (in case of duplicates)
+                    const updatedContent = parentNote.longFormContent.split(oldStr).join(newStr);
+                    nextBullets[parentNote.id] = {
+                        ...parentNote,
+                        longFormContent: updatedContent,
+                        updatedAt: now
+                    };
+                }
+            }
+
             return {
                 ...state,
-                bullets: {
-                    ...state.bullets,
-                    [oldBullet.id]: { ...oldBullet, state: 'migrated', updatedAt: now },
-                    [newId]: {
-                        ...oldBullet,
-                        id: newId,
-                        date: action.payload.targetDate,
-                        state: 'open',
-                        order: now,
-                        createdAt: now,
-                        updatedAt: now,
-                    },
-                },
+                bullets: nextBullets
             };
         }
         case 'SET_VIEW': {

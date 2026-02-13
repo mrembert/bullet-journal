@@ -3,18 +3,23 @@ import { BulletEditor } from './BulletEditor';
 import { type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { TaskGroupList } from './TaskGroupList';
-import { CheckSquare, Grid, Layers } from 'lucide-react';
+import { CheckSquare, Grid, Layers, ChevronRight } from 'lucide-react';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
 import { useEffect, useMemo } from 'react';
 
 export function DailyLog() {
     const { state, dispatch } = useStore();
     const { date } = state.view;
-    const { groupByProject, showCompleted, sortByType } = state.preferences;
+    const { groupByProject, showCompleted, showMigrated, sortByType } = state.preferences;
 
     // Filter bullets for the current date
     const dailyBullets = useMemo(() => Object.values(state.bullets)
         .filter((b) => b.date === date) // Includes project tasks if they have this date
+        .filter((b) => {
+            if (!showCompleted && (b.state === 'completed' || b.state === 'cancelled')) return false;
+            if (!showMigrated && b.state === 'migrated') return false;
+            return true;
+        })
         .sort((a, b) => {
             if (sortByType) {
                 // Event > Task > Note
@@ -23,7 +28,7 @@ export function DailyLog() {
                 if (typeDiff !== 0) return typeDiff;
             }
             return (a.order || 0) - (b.order || 0);
-        }), [state.bullets, date, sortByType]);
+        }), [state.bullets, date, sortByType, showCompleted, showMigrated]);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -56,6 +61,7 @@ export function DailyLog() {
 
     const toggleGrouping = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'groupByProject' } });
     const toggleCompleted = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'showCompleted' } });
+    const toggleMigrated = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'showMigrated' } });
     const toggleSortType = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'sortByType' } });
 
     const { setFocusedId } = useKeyboardFocus();
@@ -88,10 +94,19 @@ export function DailyLog() {
                     onClick={toggleCompleted}
                     className={`btn ${showCompleted ? 'btn-primary' : 'btn-ghost'}`}
                     style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
-                    title={showCompleted ? "Hide Completed" : "Show Completed"}
+                    title={showCompleted ? "Hide Done" : "Show Done"}
                 >
                     <CheckSquare size={16} />
-                    {showCompleted ? " Show Done" : " Hide Done"}
+                    {showCompleted ? " Hide Done" : " Show Done"}
+                </button>
+                <button
+                    onClick={toggleMigrated}
+                    className={`btn ${showMigrated ? 'btn-primary' : 'btn-ghost'}`}
+                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                    title={showMigrated ? "Hide Moved" : "Show Moved"}
+                >
+                    <ChevronRight size={16} />
+                    {showMigrated ? " Hide Moved" : " Show Moved"}
                 </button>
                 <button
                     onClick={toggleSortType}
