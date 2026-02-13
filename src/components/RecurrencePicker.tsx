@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { RecurrenceConfig, RecurrenceFrequency } from '../lib/recurrence';
+import { useState, useEffect } from 'react';
+import type { RecurrenceConfig, RecurrenceFrequency } from '../lib/recurrence';
 import { getDay, getDate } from 'date-fns';
 import { X } from 'lucide-react';
 

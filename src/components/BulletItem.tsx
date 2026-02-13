@@ -228,7 +228,9 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                         bullet.content
                     )}
                     {isRecurring && (
-                        <Repeat size={12} className="text-secondary" style={{ opacity: 0.5 }} title="Recurring Event" />
+                        <span title="Recurring Event" style={{ display: 'inline-flex' }}>
+                            <Repeat size={12} className="text-secondary" style={{ opacity: 0.5 }} />
+                        </span>
                     )}
                     {showCollectionTag && (
                         <span style={{
