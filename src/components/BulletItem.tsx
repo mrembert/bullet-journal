@@ -58,7 +58,7 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
     const toggleState = () => {
         if (bullet.state === 'open') {
             dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, state: 'completed' } });
-        } else if (bullet.state === 'completed') {
+        } else if (bullet.state === 'completed' || bullet.state === 'migrated') {
             dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, state: 'open' } });
         }
     };

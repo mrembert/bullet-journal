@@ -199,6 +199,53 @@ describe('storeReducer', () => {
         assert.strictEqual(state.bullets['b2'].createdAt, FIXED_TIME);
     });
 
+    test('MIGRATE_BULLET updates parent note content', () => {
+        const startState: AppState = {
+            ...initialState,
+            bullets: {
+                'note1': {
+                    id: 'note1',
+                    content: 'A Note',
+                    type: 'note',
+                    state: 'open',
+                    longFormContent: '{"type":"doc","content":[{"type":"embeddedTask","attrs":{"bulletId":"b1"}}]}',
+                    order: 1,
+                    createdAt: 100,
+                    updatedAt: 100
+                },
+                'b1': {
+                    id: 'b1',
+                    content: 'Task in Note',
+                    type: 'task',
+                    state: 'open',
+                    parentNoteId: 'note1',
+                    date: '2021-07-01',
+                    order: 2,
+                    createdAt: 100,
+                    updatedAt: 100
+                }
+            }
+        };
+
+        const action: Action = {
+            type: 'MIGRATE_BULLET',
+            payload: { id: 'b1', targetDate: '2021-07-02', newId: 'b2' }
+        };
+
+        const state = reducer(startState, action);
+
+        // Parent note should be updated with new bulletId
+        const updatedNote = state.bullets['note1'];
+        assert.ok(updatedNote.longFormContent?.includes('"bulletId":"b2"'));
+        assert.ok(!updatedNote.longFormContent?.includes('"bulletId":"b1"'));
+        assert.strictEqual(updatedNote.updatedAt, FIXED_TIME);
+
+        // Bullets should be updated
+        assert.strictEqual(state.bullets['b1'].state, 'migrated');
+        assert.strictEqual(state.bullets['b2'].state, 'open');
+        assert.strictEqual(state.bullets['b2'].parentNoteId, 'note1');
+    });
+
     test('MIGRATE_BULLET (collection) updates date only', () => {
         const startState: AppState = {
             ...initialState,

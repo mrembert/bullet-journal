@@ -112,6 +112,9 @@ export async function performActionInFirestoreLogic(
                     });
                 } else {
                     const now = Date.now();
+                    const newId = action.payload.newId;
+                    if (!newId) return;
+
                     // 1. Update Old
                     await deps.updateDoc(deps.doc(usersRef, 'bullets', bullet.id), {
                         state: 'migrated',
@@ -119,9 +122,6 @@ export async function performActionInFirestoreLogic(
                     });
 
                     // 2. Create New
-                    const newId = action.payload.newId;
-                    if (!newId) return;
-
                     await deps.setDoc(deps.doc(usersRef, 'bullets', newId), {
                         ...bullet,
                         id: newId,
@@ -131,6 +131,20 @@ export async function performActionInFirestoreLogic(
                         updatedAt: now,
                         order: now
                     });
+
+                    // 3. Update Parent Note if exists
+                    if (bullet.parentNoteId && currentState.bullets[bullet.parentNoteId]) {
+                        const parentNote = currentState.bullets[bullet.parentNoteId];
+                        if (parentNote.longFormContent) {
+                            const oldStr = `"bulletId":"${bullet.id}"`;
+                            const newStr = `"bulletId":"${newId}"`;
+                            const updatedContent = parentNote.longFormContent.split(oldStr).join(newStr);
+                            await deps.updateDoc(deps.doc(usersRef, 'bullets', parentNote.id), {
+                                longFormContent: updatedContent,
+                                updatedAt: now
+                            });
+                        }
+                    }
                 }
                 break;
             }
