@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useStore } from '../store';
 import { SortableBulletItem } from './SortableBulletItem';
 import { BulletEditor } from './BulletEditor';
@@ -20,6 +20,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
 import { useEffect } from 'react';
+import type { Bullet } from '../types';
 
 export function CollectionView() {
     const { state, dispatch } = useStore();
@@ -30,26 +31,25 @@ export function CollectionView() {
 
     const collection = collectionId ? state.collections[collectionId] : null;
 
-    if (!collection) return <div>Collection not found</div>;
-
     // Filter bullets for this collection
-    const bullets = Object.values(state.bullets)
-        .filter((b) => b.collectionId === collectionId)
-        .filter((b) => showCompleted || b.state !== 'completed')
-        .sort((a, b) => {
+    const bullets = useMemo(() => collection ? Object.values(state.bullets)
+        .filter((b: Bullet) => b.collectionId === collectionId)
+        .filter((b: Bullet) => showCompleted || b.state !== 'completed')
+        .sort((a: Bullet, b: Bullet) => {
             if (sortByType) {
                 const typeOrder = { event: 0, task: 1, note: 2 };
                 const typeDiff = (typeOrder[a.type] || 0) - (typeOrder[b.type] || 0);
                 if (typeDiff !== 0) return typeDiff;
             }
             return (a.order || 0) - (b.order || 0);
-        });
+        }) : [], [collection, collectionId, state.bullets, showCompleted, sortByType]);
 
     // Register visible IDs for keyboard navigation
     useEffect(() => {
-        setVisibleIds(bullets.map(b => b.id));
+        if (!collection) return;
+        setVisibleIds(bullets.map((b: Bullet) => b.id));
         return () => setVisibleIds([]);
-    }, [bullets, setVisibleIds]);
+    }, [collection, bullets, setVisibleIds]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -62,16 +62,18 @@ export function CollectionView() {
         })
     );
 
+    if (!collection) return <div>Collection not found</div>;
+
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
 
         if (active.id !== over?.id) {
-            const oldIndex = bullets.findIndex((b) => b.id === active.id);
-            const newIndex = bullets.findIndex((b) => b.id === over?.id);
+            const oldIndex = bullets.findIndex((b: Bullet) => b.id === active.id);
+            const newIndex = bullets.findIndex((b: Bullet) => b.id === over?.id);
 
             const newOrder = arrayMove(bullets, oldIndex, newIndex);
 
-            const updates = newOrder.map((b, index) => ({
+            const updates = newOrder.map((b: Bullet, index) => ({
                 id: b.id,
                 order: index * 1000
             }));
@@ -124,10 +126,10 @@ export function CollectionView() {
                     onDragEnd={handleDragEnd}
                 >
                     <SortableContext
-                        items={bullets.map(b => b.id)}
+                        items={bullets.map((b: Bullet) => b.id)}
                         strategy={verticalListSortingStrategy}
                     >
-                        {bullets.map((bullet) => (
+                        {bullets.map((bullet: Bullet) => (
                             <SortableBulletItem key={bullet.id} bullet={bullet} isFocused={bullet.id === focusedId} />
                         ))}
                     </SortableContext>

@@ -12,8 +12,11 @@ export function WeekLog() {
 
     // Use state.view.date as the anchor for the week
     const currentDate = parseISO(state.view.date);
-    const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday start
-    const daysOfWeek = Array.from({ length: 7 }, (_, i) => addDays(startOfCurrentWeek, i));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const startOfCurrentWeek = useMemo(() => startOfWeek(currentDate, { weekStartsOn: 1 }), [state.view.date]); // Monday start
+    const daysOfWeek = useMemo(() =>
+        Array.from({ length: 7 }, (_, i) => addDays(startOfCurrentWeek, i)),
+    [startOfCurrentWeek]);
 
     const changeWeek = (weeks: number) => {
         const newDate = addDays(currentDate, weeks * 7);
@@ -35,7 +38,7 @@ export function WeekLog() {
     const weekStartStr = format(startOfCurrentWeek, 'yyyy-MM-dd');
 
     // Get all dates in range
-    const datesInRange = daysOfWeek.map(d => format(d, 'yyyy-MM-dd'));
+    const datesInRange = useMemo(() => daysOfWeek.map(d => format(d, 'yyyy-MM-dd')), [daysOfWeek]);
 
     const weekBullets = useMemo(() => Object.values(state.bullets).filter(b =>
         (b.collectionId ? true : true) && !!b.date && datesInRange.includes(b.date as string)
@@ -56,7 +59,7 @@ export function WeekLog() {
         }
 
         return (a.order || 0) - (b.order || 0);
-    }), [state.bullets, datesInRange.join(','), sortByType, showCompleted, showMigrated]); // join dates to avoid array ref dependency issues
+    }), [state.bullets, datesInRange, sortByType, showCompleted, showMigrated]);
 
     const defaultEditorDate = isSameDay(currentDate, new Date()) || datesInRange.includes(format(new Date(), 'yyyy-MM-dd'))
         ? format(new Date(), 'yyyy-MM-dd')
@@ -69,7 +72,7 @@ export function WeekLog() {
         if (weekBullets.length > 0) {
             setFocusedId(weekBullets[0].id);
         }
-    }, [weekStartStr]);
+    }, [weekStartStr, weekBullets, setFocusedId]);
 
     return (
         <div className="week-log">

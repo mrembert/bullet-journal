@@ -1,5 +1,5 @@
-
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface KeyboardFocusContextType {
     focusedId: string | null;
@@ -53,12 +53,10 @@ export function KeyboardFocusProvider({ children }: { children: React.ReactNode 
     }, []);
 
     // If focused item disappears (filtered out), clear focus or move to neighbor
-    useEffect(() => {
-        if (focusedId && visibleIds.length > 0 && !visibleIds.includes(focusedId)) {
-            // Find nearest neighbor? For simplicity, just clear or snap to top
-            setFocusedId(null);
-        }
-    }, [visibleIds, focusedId]);
+    if (focusedId && visibleIds.length > 0 && !visibleIds.includes(focusedId)) {
+        // Find nearest neighbor? For simplicity, just clear or snap to top
+        setFocusedId(null);
+    }
 
     return (
         <KeyboardFocusContext.Provider value={{
