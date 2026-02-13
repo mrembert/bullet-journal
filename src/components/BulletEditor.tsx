@@ -1,3 +1,4 @@
+// Recurring Events Feature
 import React, { useState } from 'react';
 import { useStore } from '../store';
 import type { BulletType } from '../types';

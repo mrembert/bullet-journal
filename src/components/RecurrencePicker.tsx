@@ -1,3 +1,4 @@
+// Recurring Events Feature
 import { useState, useEffect } from 'react';
 import type { RecurrenceConfig, RecurrenceFrequency } from '../lib/recurrence';
 import { getDay, getDate } from 'date-fns';
