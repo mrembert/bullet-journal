@@ -1,0 +1,325 @@
+﻿TAP version 13
+# Subtest: subscribeToUserDataLogic
+    # Subtest: should subscribe to bullets and collections
+    ok 1 - should subscribe to bullets and collections
+      ---
+      duration_ms: 7.8515
+      type: 'test'
+      ...
+    # Subtest: should handle bullet updates
+    ok 2 - should handle bullet updates
+      ---
+      duration_ms: 3.5876
+      type: 'test'
+      ...
+    1..2
+ok 1 - subscribeToUserDataLogic
+  ---
+  duration_ms: 15.1025
+  type: 'suite'
+  ...
+# Subtest: performActionInFirestoreLogic
+    # Subtest: ADD_BULLET should call setDoc with correct data
+    ok 1 - ADD_BULLET should call setDoc with correct data
+      ---
+      duration_ms: 2.5532
+      type: 'test'
+      ...
+    # Subtest: UPDATE_BULLET should call updateDoc
+    ok 2 - UPDATE_BULLET should call updateDoc
+      ---
+      duration_ms: 0.5408
+      type: 'test'
+      ...
+    # Subtest: DELETE_BULLET should call deleteDoc
+    ok 3 - DELETE_BULLET should call deleteDoc
+      ---
+      duration_ms: 0.5176
+      type: 'test'
+      ...
+    # Subtest: MIGRATE_BULLET (no collection) should update old and create new
+    ok 4 - MIGRATE_BULLET (no collection) should update old and create new
+      ---
+      duration_ms: 1.8594
+      type: 'test'
+      ...
+    # Subtest: MIGRATE_BULLET (collection) should only update date
+    ok 5 - MIGRATE_BULLET (collection) should only update date
+      ---
+      duration_ms: 0.6754
+      type: 'test'
+      ...
+    1..5
+ok 2 - performActionInFirestoreLogic
+  ---
+  duration_ms: 7.0219
+  type: 'suite'
+  ...
+# Subtest: Security: firebase.ts should not log sensitive configuration
+not ok 3 - Security: firebase.ts should not log sensitive configuration
+  ---
+  duration_ms: 20.9261
+  type: 'test'
+  location: 'C:\\Users\\mremb\\Documents\\bullet journal\\src\\lib\\firebase.security.test.ts:10:1'
+  failureType: 'testCodeFailure'
+  error: 'firebase.ts contains console.log(firebaseConfig), which may leak credentials.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'fail'
+  stack: |-
+    TestContext.<anonymous> (file:///C:/Users/mremb/Documents/bullet%20journal/src/lib/firebase.security.test.ts:26:14)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: Navigation - moveDown with j
+ok 4 - Navigation - moveDown with j
+  ---
+  duration_ms: 7.591
+  type: 'test'
+  ...
+# Subtest: Navigation - moveDown with ArrowDown
+ok 5 - Navigation - moveDown with ArrowDown
+  ---
+  duration_ms: 1.0191
+  type: 'test'
+  ...
+# Subtest: Navigation - moveUp with k
+ok 6 - Navigation - moveUp with k
+  ---
+  duration_ms: 0.6359
+  type: 'test'
+  ...
+# Subtest: Navigation - moveUp with ArrowUp
+ok 7 - Navigation - moveUp with ArrowUp
+  ---
+  duration_ms: 0.5049
+  type: 'test'
+  ...
+# Subtest: Escape clears focus
+ok 8 - Escape clears focus
+  ---
+  duration_ms: 0.8659
+  type: 'test'
+  ...
+# Subtest: Ignores input when isInput is true (and not Escape)
+ok 9 - Ignores input when isInput is true (and not Escape)
+  ---
+  duration_ms: 0.4256
+  type: 'test'
+  ...
+# Subtest: Action - x toggles completion
+ok 10 - Action - x toggles completion
+  ---
+  duration_ms: 4.1554
+  type: 'test'
+  ...
+# Subtest: Action - x toggles completion (completed -> open)
+ok 11 - Action - x toggles completion (completed -> open)
+  ---
+  duration_ms: 0.8402
+  type: 'test'
+  ...
+# Subtest: Action - n opens note
+ok 12 - Action - n opens note
+  ---
+  duration_ms: 7.7184
+  type: 'test'
+  ...
+# Subtest: Action - m prompts migrate
+ok 13 - Action - m prompts migrate
+  ---
+  duration_ms: 1.4374
+  type: 'test'
+  ...
+# Subtest: Action - d requests confirmation
+ok 14 - Action - d requests confirmation
+  ---
+  duration_ms: 0.6753
+  type: 'test'
+  ...
+# Subtest: Action - e sets editing id
+ok 15 - Action - e sets editing id
+  ---
+  duration_ms: 0.3296
+  type: 'test'
+  ...
+# Subtest: No action if not focused
+ok 16 - No action if not focused
+  ---
+  duration_ms: 0.7371
+  type: 'test'
+  ...
+# Subtest: No action if focused bullet does not exist
+ok 17 - No action if focused bullet does not exist
+  ---
+  duration_ms: 0.3182
+  type: 'test'
+  ...
+# Subtest: cleanNoteContent - basic cleaning
+ok 18 - cleanNoteContent - basic cleaning
+  ---
+  duration_ms: 12.8678
+  type: 'test'
+  ...
+# Subtest: cleanNoteContent - recursive cleaning
+ok 19 - cleanNoteContent - recursive cleaning
+  ---
+  duration_ms: 0.9412
+  type: 'test'
+  ...
+# Subtest: cleanNoteContent - preservation
+ok 20 - cleanNoteContent - preservation
+  ---
+  duration_ms: 0.8328
+  type: 'test'
+  ...
+# Subtest: cleanNoteContent - handles empty or invalid input
+ok 21 - cleanNoteContent - handles empty or invalid input
+  ---
+  duration_ms: 2.2924
+  type: 'test'
+  ...
+# Subtest: cleanNoteContent - handles JSON without content array
+ok 22 - cleanNoteContent - handles JSON without content array
+  ---
+  duration_ms: 0.4845
+  type: 'test'
+  ...
+# Subtest: cleanNoteContent - handles null or missing attrs/bulletId
+ok 23 - cleanNoteContent - handles null or missing attrs/bulletId
+  ---
+  duration_ms: 0.9113
+  type: 'test'
+  ...
+# Subtest: isValidUrl - valid protocols
+ok 24 - isValidUrl - valid protocols
+  ---
+  duration_ms: 3.3239
+  type: 'test'
+  ...
+# Subtest: isValidUrl - case insensitivity
+ok 25 - isValidUrl - case insensitivity
+  ---
+  duration_ms: 0.2818
+  type: 'test'
+  ...
+# Subtest: isValidUrl - invalid protocols
+ok 26 - isValidUrl - invalid protocols
+  ---
+  duration_ms: 0.686
+  type: 'test'
+  ...
+# Subtest: isValidUrl - relative URLs
+ok 27 - isValidUrl - relative URLs
+  ---
+  duration_ms: 1.0428
+  type: 'test'
+  ...
+# Subtest: isValidUrl - whitespace handling
+ok 28 - isValidUrl - whitespace handling
+  ---
+  duration_ms: 0.4676
+  type: 'test'
+  ...
+# Subtest: isValidUrl - empty or invalid input
+ok 29 - isValidUrl - empty or invalid input
+  ---
+  duration_ms: 5.0199
+  type: 'test'
+  ...
+# Subtest: storeReducer
+    # Subtest: ADD_BULLET adds a new bullet
+    ok 1 - ADD_BULLET adds a new bullet
+      ---
+      duration_ms: 3.8648
+      type: 'test'
+      ...
+    # Subtest: UPDATE_BULLET updates content
+    ok 2 - UPDATE_BULLET updates content
+      ---
+      duration_ms: 0.6008
+      type: 'test'
+      ...
+    # Subtest: UPDATE_BULLET handles completion state
+    ok 3 - UPDATE_BULLET handles completion state
+      ---
+      duration_ms: 0.9902
+      type: 'test'
+      ...
+    # Subtest: DELETE_BULLET removes a bullet
+    ok 4 - DELETE_BULLET removes a bullet
+      ---
+      duration_ms: 4.7084
+      type: 'test'
+      ...
+    # Subtest: SET_VIEW updates view state
+    ok 5 - SET_VIEW updates view state
+      ---
+      duration_ms: 0.5619
+      type: 'test'
+      ...
+    # Subtest: ADD_COLLECTION adds a collection
+    ok 6 - ADD_COLLECTION adds a collection
+      ---
+      duration_ms: 0.9217
+      type: 'test'
+      ...
+    # Subtest: UPDATE_COLLECTION updates collection
+    ok 7 - UPDATE_COLLECTION updates collection
+      ---
+      duration_ms: 0.5698
+      type: 'test'
+      ...
+    # Subtest: DELETE_COLLECTION removes collection
+    ok 8 - DELETE_COLLECTION removes collection
+      ---
+      duration_ms: 0.3333
+      type: 'test'
+      ...
+    # Subtest: MIGRATE_BULLET (standard) moves task to new day
+    ok 9 - MIGRATE_BULLET (standard) moves task to new day
+      ---
+      duration_ms: 2.0978
+      type: 'test'
+      ...
+    # Subtest: MIGRATE_BULLET (collection) updates date only
+    ok 10 - MIGRATE_BULLET (collection) updates date only
+      ---
+      duration_ms: 2.9531
+      type: 'test'
+      ...
+    # Subtest: REORDER_BULLETS updates order
+    ok 11 - REORDER_BULLETS updates order
+      ---
+      duration_ms: 0.9283
+      type: 'test'
+      ...
+    # Subtest: TOGGLE_PREFERENCE toggles boolean value
+    ok 12 - TOGGLE_PREFERENCE toggles boolean value
+      ---
+      duration_ms: 0.3424
+      type: 'test'
+      ...
+    # Subtest: LOAD_DATA merges data
+    ok 13 - LOAD_DATA merges data
+      ---
+      duration_ms: 1.4
+      type: 'test'
+      ...
+    1..13
+ok 30 - storeReducer
+  ---
+  duration_ms: 24.3183
+  type: 'suite'
+  ...
+1..30
+# tests 47
+# suites 3
+# pass 46
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3328.9636

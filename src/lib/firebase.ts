@@ -18,7 +18,8 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 // Diagnostic log for config (will help verify if vars reached the build)
-console.log("Firebase: Config initialized (API Key exists: " + !!firebaseConfig.apiKey + ")");
+const hasKey = !!firebaseConfig.apiKey;
+console.log("Firebase: Initialization check - Auth key present: " + hasKey);
 
 // Development Environment Setup - Removed top-level await for stability
 if (import.meta.env.VITE_USE_EMULATOR === 'true') {
