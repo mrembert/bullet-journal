@@ -441,7 +441,8 @@ body {
     margin-right: -0.25rem;
     border-radius: var(--radius-sm);
     transition: opacity 0.2s ease, background-color 0.2s ease;
-    /* Default visibility (Mobile / Base) */
+
+    /* Default visibility (Base/Mobile) - Changed: Hidden by default on mobile unless active */
     opacity: 0.5;
     min-width: 24px; /* Ensure touch target isn't too small visually */
     min-height: 24px;
@@ -451,9 +452,30 @@ body {
     cursor: grabbing;
 }
 
+.mobile-only {
+    display: none;
+}
+
+/* Mobile Logic */
+@media (max-width: 768px) {
+    .task-drag-handle {
+        display: none;
+    }
+
+    /* Only show when parent has rearrange-active class */
+    .rearrange-active .task-drag-handle {
+        display: flex;
+    }
+
+    .mobile-only {
+        display: inline-flex;
+    }
+}
+
 /* Desktop Hover Behavior */
 @media (min-width: 769px) {
     .task-drag-handle {
+        display: flex; /* Always display on desktop, rely on opacity */
         opacity: 0;
     }
 
@@ -469,5 +491,9 @@ body {
     /* Show when keyboard focused */
     .task-item.keyboard-focused .task-drag-handle {
         opacity: 0.5;
+    }
+
+    .mobile-only {
+        display: none;
     }
 }
