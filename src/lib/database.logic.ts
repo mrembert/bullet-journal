@@ -62,8 +62,7 @@ export async function performActionInFirestoreLogic(
     deps: DatabaseDeps,
     db: Firestore,
     uid: string,
-    action: Action,
-    currentState: AppState
+    action: Action
 ) {
     const usersRef = deps.doc(db, 'users', uid);
 
@@ -148,53 +147,6 @@ export async function performActionInFirestoreLogic(
                     id,
                     updatedAt: Date.now()
                 });
-                break;
-            }
-            case 'MIGRATE_BULLET': {
-                const bullet = currentState.bullets[action.payload.id];
-                if (!bullet) return;
-
-                if (bullet.collectionId) {
-                    await deps.updateDoc(deps.doc(usersRef, 'bullets', bullet.id), {
-                        date: action.payload.targetDate,
-                        updatedAt: Date.now()
-                    });
-                } else {
-                    const now = Date.now();
-                    const newId = action.payload.newId;
-                    if (!newId) return;
-
-                    // 1. Update Old
-                    await deps.updateDoc(deps.doc(usersRef, 'bullets', bullet.id), {
-                        state: 'migrated',
-                        updatedAt: now
-                    });
-
-                    // 2. Create New
-                    await deps.setDoc(deps.doc(usersRef, 'bullets', newId), {
-                        ...bullet,
-                        id: newId,
-                        date: action.payload.targetDate,
-                        state: 'open',
-                        createdAt: now,
-                        updatedAt: now,
-                        order: now
-                    });
-
-                    // 3. Update Parent Note if exists
-                    if (bullet.parentNoteId && currentState.bullets[bullet.parentNoteId]) {
-                        const parentNote = currentState.bullets[bullet.parentNoteId];
-                        if (parentNote.longFormContent) {
-                            const oldStr = `"bulletId":"${bullet.id}"`;
-                            const newStr = `"bulletId":"${newId}"`;
-                            const updatedContent = parentNote.longFormContent.split(oldStr).join(newStr);
-                            await deps.updateDoc(deps.doc(usersRef, 'bullets', parentNote.id), {
-                                longFormContent: updatedContent,
-                                updatedAt: now
-                            });
-                        }
-                    }
-                }
                 break;
             }
             case 'ADD_COLLECTION': {

@@ -8,7 +8,7 @@ import { useEffect, useMemo } from 'react';
 
 export function WeekLog() {
     const { state, dispatch } = useStore();
-    const { groupByProject, showCompleted, showMigrated, sortByType } = state.preferences;
+    const { groupByProject, showCompleted, sortByType } = state.preferences;
 
     // Use state.view.date as the anchor for the week
     const currentDate = parseISO(state.view.date);
@@ -31,7 +31,6 @@ export function WeekLog() {
 
     const toggleGrouping = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'groupByProject' } });
     const toggleCompleted = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'showCompleted' } });
-    const toggleMigrated = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'showMigrated' } });
     const toggleSortType = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'sortByType' } });
 
     // Filter bullets for the entire week
@@ -44,7 +43,7 @@ export function WeekLog() {
         (b.collectionId ? true : true) && !!b.date && datesInRange.includes(b.date as string)
     ).filter((b) => {
         if (!showCompleted && (b.state === 'completed' || b.state === 'cancelled')) return false;
-        if (!showMigrated && b.state === 'migrated') return false;
+        if (b.state === 'migrated') return false; // Always hide migrated items
         return true;
     }).sort((a, b) => {
         // Sort by date then order
@@ -59,7 +58,7 @@ export function WeekLog() {
         }
 
         return (a.order || 0) - (b.order || 0);
-    }), [state.bullets, datesInRange, sortByType, showCompleted, showMigrated]);
+    }), [state.bullets, datesInRange, sortByType, showCompleted]);
 
     const defaultEditorDate = isSameDay(currentDate, new Date()) || datesInRange.includes(format(new Date(), 'yyyy-MM-dd'))
         ? format(new Date(), 'yyyy-MM-dd')
@@ -116,15 +115,6 @@ export function WeekLog() {
                 >
                     <CheckSquare size={16} />
                     {showCompleted ? " Hide Done" : " Show Done"}
-                </button>
-                <button
-                    onClick={toggleMigrated}
-                    className={`btn ${showMigrated ? 'btn-primary' : 'btn-ghost'}`}
-                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
-                    title={showMigrated ? "Hide Moved" : "Show Moved"}
-                >
-                    <ChevronRight size={16} />
-                    {showMigrated ? " Hide Moved" : " Show Moved"}
                 </button>
                 <button
                     onClick={toggleSortType}

@@ -8,7 +8,7 @@ const createMockState = (bullets: Record<string, Bullet> = {}): AppState => ({
     bullets,
     collections: {},
     view: { mode: 'daily', date: '2023-01-01' },
-    preferences: { groupByProject: false, showCompleted: true, showMigrated: false }
+    preferences: { groupByProject: false, showCompleted: true, sortByType: false }
 });
 
 // Helper to create a mock bullet
@@ -31,7 +31,7 @@ const createMockActions = () => ({
     setEditingId: test.mock.fn(),
     dispatch: test.mock.fn(),
     openNote: test.mock.fn(),
-    onMigratePrompt: test.mock.fn(),
+    onMoveToProject: test.mock.fn(),
     requestConfirmation: test.mock.fn()
 });
 
@@ -190,24 +190,6 @@ test('Action - n opens note', (t) => {
     assert.strictEqual(event.preventDefault.mock.callCount(), 1);
     assert.strictEqual(actions.openNote.mock.callCount(), 1);
     assert.strictEqual(actions.openNote.mock.calls[0].arguments[0], 'b1');
-});
-
-test('Action - m prompts migrate', (t) => {
-    const bullet = createMockBullet('b1');
-    const actions = createMockActions();
-    const context: KeyboardShortcutContext = {
-        state: createMockState({ [bullet.id]: bullet }),
-        focusedId: bullet.id,
-        isInput: false,
-        actions
-    };
-    const event = { key: 'm', preventDefault: t.mock.fn() };
-
-    handleKeyboardShortcut(event, context);
-
-    assert.strictEqual(event.preventDefault.mock.callCount(), 1);
-    assert.strictEqual(actions.onMigratePrompt.mock.callCount(), 1);
-    assert.strictEqual(actions.onMigratePrompt.mock.calls[0].arguments[0], 'b1');
 });
 
 test('Action - d requests confirmation', (t) => {

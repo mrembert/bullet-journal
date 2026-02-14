@@ -29,10 +29,10 @@ export function subscribeToUserData(uid: string, onDataChange: (data: Partial<Ap
     return subscribeToUserDataLogic(deps, db, uid, onDataChange);
 }
 
-export async function performActionInFirestore(uid: string, action: Action, currentState: AppState) {
+export async function performActionInFirestore(uid: string, action: Action) {
     if (!db) {
         console.error("Firebase Firestore not initialized");
         return;
     }
-    return performActionInFirestoreLogic(deps, db, uid, action, currentState);
+    return performActionInFirestoreLogic(deps, db, uid, action);
 }

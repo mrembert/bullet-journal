@@ -1,4 +1,5 @@
 export type BulletType = 'task' | 'note' | 'event';
+// 'migrated' is deprecated
 export type BulletState = 'open' | 'completed' | 'migrated' | 'scheduled' | 'cancelled';
 
 export interface Bullet {
@@ -41,7 +42,6 @@ export interface AppState {
     preferences: {
         groupByProject: boolean;
         showCompleted: boolean;
-        showMigrated: boolean; // Optional: might want to toggle moved items too
         sortByType: boolean; // Added for sorting items by type
     };
 }
@@ -57,7 +57,6 @@ export type Action =
     | { type: 'ADD_COLLECTION'; payload: { id: string; title: string; type: Collection['type'] } }
     | { type: 'UPDATE_COLLECTION'; payload: { id: string; title?: string; archived?: boolean } }
     | { type: 'DELETE_COLLECTION'; payload: { id: string } }
-    | { type: 'MIGRATE_BULLET'; payload: { id: string; targetDate: string; newId?: string } }
     | { type: 'REORDER_BULLETS'; payload: { items: { id: string, order: number }[] } }
     | { type: 'REORDER_COLLECTIONS'; payload: { items: { id: string, order: number }[] } } // Added action
     | { type: 'TOGGLE_PREFERENCE'; payload: { key: keyof AppState['preferences'] } }

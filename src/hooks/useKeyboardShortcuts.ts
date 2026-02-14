@@ -6,10 +6,8 @@ import { useConfirmation } from '../contexts/ConfirmationContext';
 import { handleKeyboardShortcut } from '../lib/keyboardShortcuts';
 
 export function useKeyboardShortcuts({
-    onMigratePrompt,
     onMoveToProject
 }: {
-    onMigratePrompt: (bulletId: string) => void;
     onMoveToProject: (bulletId: string) => void;
 }) {
     const { state, dispatch } = useStore();
@@ -23,7 +21,6 @@ export function useKeyboardShortcuts({
     const setEditingIdRef = useRef(setEditingId);
     const openNoteRef = useRef(openNote);
     const requestConfirmationRef = useRef(requestConfirmation);
-    const onMigratePromptRef = useRef(onMigratePrompt);
     const onMoveToProjectRef = useRef(onMoveToProject);
 
     useEffect(() => { stateRef.current = state; }, [state]);
@@ -31,7 +28,6 @@ export function useKeyboardShortcuts({
     useEffect(() => { setEditingIdRef.current = setEditingId; }, [setEditingId]);
     useEffect(() => { openNoteRef.current = openNote; }, [openNote]);
     useEffect(() => { requestConfirmationRef.current = requestConfirmation; }, [requestConfirmation]);
-    useEffect(() => { onMigratePromptRef.current = onMigratePrompt; }, [onMigratePrompt]);
     useEffect(() => { onMoveToProjectRef.current = onMoveToProject; }, [onMoveToProject]);
 
     useEffect(() => {
@@ -56,7 +52,6 @@ export function useKeyboardShortcuts({
                     setEditingId: (id) => setEditingIdRef.current(id),
                     dispatch,
                     openNote: (id) => openNoteRef.current(id),
-                    onMigratePrompt: (id) => onMigratePromptRef.current(id),
                     onMoveToProject: (id) => onMoveToProjectRef.current(id),
                     requestConfirmation: (opts) => requestConfirmationRef.current(opts),
                 }

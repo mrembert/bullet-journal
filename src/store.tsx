@@ -45,7 +45,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             if (undoAction) {
                 // Execute undo
                 rawDispatch(undoAction);
-                if (user) performActionInFirestore(user.uid, undoAction, state);
+                if (user) performActionInFirestore(user.uid, undoAction);
                 showToast("Undone");
             }
             return;
@@ -60,10 +60,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         if (action.type === 'ADD_COLLECTION' && !action.payload.id) {
             enhancedAction.payload.id = generateUUID();
-        }
-        if (action.type === 'MIGRATE_BULLET' && !action.payload.newId) {
-            // Only if not collection-based. But safely we can just generate one.
-            enhancedAction.payload.newId = generateUUID();
         }
 
         // --- CAPTURE INVERSE ---
@@ -82,7 +78,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     undoStack.current = [{ type: 'RESTORE_BULLET', payload: bullet }];
                 }
             } else if (
-                enhancedAction.type === 'MIGRATE_BULLET' ||
                 enhancedAction.type === 'ADD_COLLECTION' ||
                 enhancedAction.type === 'UPDATE_COLLECTION' ||
                 enhancedAction.type === 'DELETE_COLLECTION' ||
@@ -103,7 +98,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (user) {
             // We verify it's a data-modifying action, not UI (SET_VIEW)
             if (action.type !== 'SET_VIEW' && action.type !== 'LOAD_DATA') {
-                performActionInFirestore(user.uid, enhancedAction, state);
+                performActionInFirestore(user.uid, enhancedAction);
             }
         }
     }, [state, user, showToast]);
