@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Trash, FileText, FolderInput, Calendar, MoreVertical, Repeat, XCircle, GripVertical } from 'lucide-react';
 import type { Bullet } from '../types';
+import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core';
 import { useStore } from '../store';
 import { BulletIcon } from './BulletIcon';
 import { DatePicker } from './DatePicker';
@@ -22,8 +23,8 @@ interface BulletItemProps {
     onMenuOpenChange?: (open: boolean) => void;
     depth?: number;
     dragHandleProps?: {
-        attributes: any;
-        listeners: any;
+        attributes: DraggableAttributes;
+        listeners: DraggableSyntheticListeners;
     };
 }
 
