@@ -49,7 +49,7 @@ export interface AppState {
 export type Action =
     | { type: 'ADD_BULLET'; payload: { id: string; content: string; type: BulletType; date?: string | null; collectionId?: string | null; parentNoteId?: string; recurringId?: string; recurrenceRule?: string } }
     | { type: 'ADD_BULLETS'; payload: { bullets: Bullet[] } } // Batch add
-    | { type: 'UPDATE_BULLET'; payload: { id: string; content?: string; state?: BulletState; longFormContent?: string; date?: string | null; collectionId?: string | null } }
+    | { type: 'UPDATE_BULLET'; payload: { id: string; content?: string; state?: BulletState; longFormContent?: string; date?: string | null; collectionId?: string | null; recurringId?: string; recurrenceRule?: string } }
     | { type: 'UPDATE_BULLETS'; payload: { ids: string[]; updates: Partial<Bullet> } } // Batch update
     | { type: 'DELETE_BULLET'; payload: { id: string } }
     | { type: 'DELETE_BULLETS'; payload: { ids: string[] } } // Batch delete
