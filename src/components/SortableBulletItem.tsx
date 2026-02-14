@@ -36,8 +36,6 @@ export function SortableBulletItem({ bullet, isFocused, depth = 0 }: SortableBul
         <motion.div
             ref={setNodeRef}
             style={style}
-            {...attributes}
-            {...listeners}
             layout
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -49,6 +47,7 @@ export function SortableBulletItem({ bullet, isFocused, depth = 0 }: SortableBul
                 isFocused={isFocused}
                 onMenuOpenChange={setMenuOpen}
                 depth={depth}
+                dragHandleProps={{ attributes, listeners }}
             />
         </motion.div>
     );

@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Trash, FileText, FolderInput, Calendar, MoreVertical, Repeat, XCircle } from 'lucide-react';
+import { Trash, FileText, FolderInput, Calendar, MoreVertical, Repeat, XCircle, GripVertical } from 'lucide-react';
 import type { Bullet } from '../types';
 import { useStore } from '../store';
 import { BulletIcon } from './BulletIcon';
@@ -21,9 +21,13 @@ interface BulletItemProps {
     isFocused?: boolean;
     onMenuOpenChange?: (open: boolean) => void;
     depth?: number;
+    dragHandleProps?: {
+        attributes: any;
+        listeners: any;
+    };
 }
 
-export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet, isFocused, onMenuOpenChange, depth = 0 }, ref) => {
+export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet, isFocused, onMenuOpenChange, depth = 0, dragHandleProps }, ref) => {
     const { state, dispatch } = useStore();
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showProjectPicker, setShowProjectPicker] = useState(false);
@@ -260,6 +264,16 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                     backgroundColor: isFocused ? 'hsl(var(--color-accent) / 0.05)' : 'transparent',
                 }}
             >
+                {dragHandleProps && (
+                    <div
+                        {...dragHandleProps.attributes}
+                        {...dragHandleProps.listeners}
+                        className="task-drag-handle"
+                        title="Drag to reorder"
+                    >
+                        <GripVertical size={16} />
+                    </div>
+                )}
                 <button
                     onClick={toggleState}
                     style={{
