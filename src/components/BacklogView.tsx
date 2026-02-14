@@ -1,38 +1,46 @@
 
+import { useMemo } from 'react';
 import { useStore } from '../store';
 import { BulletItem } from './BulletItem';
+import { calculateDepth } from '../lib/bulletUtils';
+import type { Bullet } from '../types';
 import { Archive, AlertCircle } from 'lucide-react';
 import { format, parseISO, isBefore, startOfDay } from 'date-fns';
 
 export function BacklogView() {
     const { state } = useStore();
-    const today = startOfDay(new Date());
 
-    const openTasks = Object.values(state.bullets)
-        .filter(b => {
-            // Must be a task
-            if (b.type !== 'task') return false;
-            // Must be open
-            if (b.state !== 'open') return false;
-            // Must be from a daily log (no collectionId)
-            // if (b.collectionId) return false; // Show project tasks too if they are undated or overdue
+    const { openTasks, visibleIdsSet } = useMemo(() => {
+        const today = startOfDay(new Date());
+        const filtered = (Object.values(state.bullets) as Bullet[])
+            .filter((b: Bullet) => {
+                // Must be a task
+                if (b.type !== 'task') return false;
+                // Must be open
+                if (b.state !== 'open') return false;
 
-            // Include if Undated OR Before Today
-            if (!b.date) return true;
+                // Include if Undated OR Before Today
+                if (!b.date) return true;
 
-            const bulletDate = parseISO(b.date);
-            return isBefore(bulletDate, today);
-        })
-        .sort((a, b) => {
-            // Undated first? Or last? Let's put Undated first.
-            if (!a.date && b.date) return -1;
-            if (a.date && !b.date) return 1;
-            if (!a.date && !b.date) return (a.order || 0) - (b.order || 0);
-            return (b.date || '').localeCompare(a.date || ''); // Descending date
-        });
+                const bulletDate = parseISO(b.date);
+                return isBefore(bulletDate, today);
+            })
+            .sort((a: Bullet, b: Bullet) => {
+                // Undated first? Or last? Let's put Undated first.
+                if (!a.date && b.date) return -1;
+                if (a.date && !b.date) return 1;
+                if (!a.date && !b.date) return (a.order || 0) - (b.order || 0);
+                return (b.date || '').localeCompare(a.date || ''); // Descending date
+            });
 
-    const undatedTasks = openTasks.filter(b => !b.date);
-    const datedTasks = openTasks.filter(b => b.date);
+        return {
+            openTasks: filtered,
+            visibleIdsSet: new Set(filtered.map((b: Bullet) => b.id))
+        };
+    }, [state.bullets]);
+
+    const undatedTasks = openTasks.filter((b: Bullet) => !b.date);
+    const datedTasks = openTasks.filter((b: Bullet) => b.date);
 
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -81,16 +89,20 @@ export function BacklogView() {
                                 Inbox / Undated
                             </h3>
                             <div>
-                                {undatedTasks.map(bullet => (
-                                    <BulletItem key={bullet.id} bullet={bullet} />
+                                {undatedTasks.map((bullet: Bullet) => (
+                                    <BulletItem
+                                        key={bullet.id}
+                                        bullet={bullet}
+                                        depth={calculateDepth(bullet, state.bullets, visibleIdsSet)}
+                                    />
                                 ))}
                             </div>
                         </div>
                     )}
 
                     {/* Dated Sections */}
-                    {Array.from(new Set(datedTasks.map(b => b.date!))).map(date => {
-                        const tasksForDate = datedTasks.filter(b => b.date === date);
+                    {Array.from(new Set(datedTasks.map((b: Bullet) => b.date as string))).map((date: string) => {
+                        const tasksForDate = datedTasks.filter((b: Bullet) => b.date === date);
                         return (
                             <div key={date}>
                                 <h3 style={{
@@ -108,8 +120,12 @@ export function BacklogView() {
                                     {format(parseISO(date), 'EEEE, MMMM do')}
                                 </h3>
                                 <div>
-                                    {tasksForDate.map(bullet => (
-                                        <BulletItem key={bullet.id} bullet={bullet} />
+                                    {tasksForDate.map((bullet: Bullet) => (
+                                        <BulletItem
+                                            key={bullet.id}
+                                            bullet={bullet}
+                                            depth={calculateDepth(bullet, state.bullets, visibleIdsSet)}
+                                        />
                                     ))}
                                 </div>
                             </div>

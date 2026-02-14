@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useStore } from '../store';
+import { calculateDepth } from '../lib/bulletUtils';
 import { SortableBulletItem } from './SortableBulletItem';
 import { BulletEditor } from './BulletEditor';
 import { Eye, EyeOff, Grid, Layers } from 'lucide-react';
@@ -31,18 +32,27 @@ export function CollectionView() {
 
     const collection = collectionId ? state.collections[collectionId] : null;
 
-    // Filter bullets for this collection
-    const bullets = useMemo(() => collection ? Object.values(state.bullets)
-        .filter((b: Bullet) => b.collectionId === collectionId)
-        .filter((b: Bullet) => showCompleted || b.state !== 'completed')
-        .sort((a: Bullet, b: Bullet) => {
-            if (sortByType) {
-                const typeOrder = { event: 0, task: 1, note: 2 };
-                const typeDiff = (typeOrder[a.type] || 0) - (typeOrder[b.type] || 0);
-                if (typeDiff !== 0) return typeDiff;
-            }
-            return (a.order || 0) - (b.order || 0);
-        }) : [], [collection, collectionId, state.bullets, showCompleted, sortByType]);
+    // Filter and calculate depth for bullets in this collection
+    const { bullets, visibleIdsSet } = useMemo(() => {
+        if (!collection) return { bullets: [], visibleIdsSet: new Set<string>() };
+
+        const filtered = Object.values(state.bullets)
+            .filter((b: Bullet) => b.collectionId === collectionId)
+            .filter((b: Bullet) => showCompleted || b.state !== 'completed')
+            .sort((a: Bullet, b: Bullet) => {
+                if (sortByType) {
+                    const typeOrder = { event: 0, task: 1, note: 2 };
+                    const typeDiff = (typeOrder[a.type] || 0) - (typeOrder[b.type] || 0);
+                    if (typeDiff !== 0) return typeDiff;
+                }
+                return (a.order || 0) - (b.order || 0);
+            });
+
+        return {
+            bullets: filtered,
+            visibleIdsSet: new Set(filtered.map((b: Bullet) => b.id))
+        };
+    }, [collection, collectionId, state.bullets, showCompleted, sortByType]);
 
     // Register visible IDs for keyboard navigation
     useEffect(() => {
@@ -130,7 +140,12 @@ export function CollectionView() {
                         strategy={verticalListSortingStrategy}
                     >
                         {bullets.map((bullet: Bullet) => (
-                            <SortableBulletItem key={bullet.id} bullet={bullet} isFocused={bullet.id === focusedId} />
+                            <SortableBulletItem
+                                key={bullet.id}
+                                bullet={bullet}
+                                isFocused={bullet.id === focusedId}
+                                depth={calculateDepth(bullet, state.bullets, visibleIdsSet)}
+                            />
                         ))}
                     </SortableContext>
                 </DndContext>
