@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Trash, FileText, FolderInput, Calendar, MoreVertical, Edit2, Repeat } from 'lucide-react';
+import { Trash, FileText, FolderInput, Calendar, MoreVertical, Edit2, Repeat, XCircle } from 'lucide-react';
 import type { Bullet } from '../types';
 import { useStore } from '../store';
 import { BulletIcon } from './BulletIcon';
@@ -108,6 +108,39 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
             }
         });
         showToast(`Updated ${ids.length} future events.`);
+        setMenuOpen(false);
+    };
+
+    const handleStopRecurring = () => {
+        requestConfirmation({
+            title: 'Stop Repeating',
+            message: 'Stop repeating this event? This will remove the recurrence rule from this event and delete all future instances.',
+            isDanger: true,
+            confirmLabel: 'Stop Repeating',
+            onConfirm: () => {
+                const futureBullets = Object.values(state.bullets).filter(b =>
+                    b.recurringId === bullet.recurringId &&
+                    b.date && bullet.date && b.date > bullet.date
+                );
+                const ids = futureBullets.map(b => b.id);
+
+                if (ids.length > 0) {
+                    dispatch({ type: 'DELETE_BULLETS', payload: { ids } });
+                }
+
+                dispatch({
+                    type: 'UPDATE_BULLET',
+                    payload: {
+                        id: bullet.id,
+                        recurringId: null,
+                        recurrenceRule: null
+                    }
+                });
+
+                showToast(`Recurrence stopped. ${ids.length} future events deleted.`);
+                setMenuOpen(false);
+            }
+        });
         setMenuOpen(false);
     };
 
@@ -432,13 +465,22 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
 
                                 {/* Recurring Actions */}
                                 {isRecurring ? (
-                                    <button
-                                        onClick={handleUpdateFuture}
-                                        className="btn btn-ghost"
-                                        style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
-                                    >
-                                        <Repeat size={14} /> Update Future Events
-                                    </button>
+                                    <>
+                                        <button
+                                            onClick={handleUpdateFuture}
+                                            className="btn btn-ghost"
+                                            style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
+                                        >
+                                            <Repeat size={14} /> Update Future Events
+                                        </button>
+                                        <button
+                                            onClick={handleStopRecurring}
+                                            className="btn btn-ghost"
+                                            style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
+                                        >
+                                            <XCircle size={14} /> Stop Repeating
+                                        </button>
+                                    </>
                                 ) : (
                                     <div style={{ position: 'relative' }}>
                                         <button

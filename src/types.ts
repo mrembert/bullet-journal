@@ -14,8 +14,8 @@ export interface Bullet {
     completedAt?: number;
     longFormContent?: string; // For meeting notes or detailed descriptions
     parentNoteId?: string; // ID of the note where this task was created
-    recurringId?: string; // ID linking recurring instances
-    recurrenceRule?: string; // Stringified rule (e.g. "daily", "weekly", or JSON)
+    recurringId?: string | null; // ID linking recurring instances
+    recurrenceRule?: string | null; // Stringified rule (e.g. "daily", "weekly", or JSON)
 }
 
 export interface Collection {
@@ -47,9 +47,9 @@ export interface AppState {
 }
 
 export type Action =
-    | { type: 'ADD_BULLET'; payload: { id: string; content: string; type: BulletType; date?: string | null; collectionId?: string | null; parentNoteId?: string; recurringId?: string; recurrenceRule?: string } }
+    | { type: 'ADD_BULLET'; payload: { id: string; content: string; type: BulletType; date?: string | null; collectionId?: string | null; parentNoteId?: string; recurringId?: string | null; recurrenceRule?: string | null } }
     | { type: 'ADD_BULLETS'; payload: { bullets: Bullet[] } } // Batch add
-    | { type: 'UPDATE_BULLET'; payload: { id: string; content?: string; state?: BulletState; longFormContent?: string; date?: string | null; collectionId?: string | null; recurringId?: string; recurrenceRule?: string } }
+    | { type: 'UPDATE_BULLET'; payload: { id: string; content?: string; state?: BulletState; longFormContent?: string; date?: string | null; collectionId?: string | null; recurringId?: string | null; recurrenceRule?: string | null } }
     | { type: 'UPDATE_BULLETS'; payload: { ids: string[]; updates: Partial<Bullet> } } // Batch update
     | { type: 'DELETE_BULLET'; payload: { id: string } }
     | { type: 'DELETE_BULLETS'; payload: { ids: string[] } } // Batch delete

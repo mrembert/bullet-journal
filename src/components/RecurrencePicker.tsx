@@ -49,8 +49,7 @@ export function RecurrencePicker({ startDate, initialConfig, onChange, onClose }
         // But usually startDate is fixed for the picker session
     }, [startDate]);
 
-    // Construct config on change
-    useEffect(() => {
+    const handleSave = () => {
         if (frequency === 'none') {
             onChange(null);
             return;
@@ -75,7 +74,7 @@ export function RecurrencePicker({ startDate, initialConfig, onChange, onClose }
         }
 
         onChange(config);
-    }, [frequency, interval, monthlyType, monthDay, monthWeek, monthWeekDay, onChange]);
+    };
 
     return createPortal(
         <div className="picker-overlay" onClick={onClose}>
@@ -166,22 +165,7 @@ export function RecurrencePicker({ startDate, initialConfig, onChange, onClose }
                 <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid hsl(var(--color-border))', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                     <button onClick={onClose} className="btn btn-ghost">Cancel</button>
                     <button
-                        onClick={() => {
-                            // Trigger the change with the current config to confirm
-                            const config: RecurrenceConfig = {
-                                frequency: frequency as RecurrenceFrequency,
-                                interval,
-                            };
-                            if (frequency === 'monthly') {
-                                if (monthlyType === 'date') {
-                                    config.monthDay = monthDay;
-                                } else {
-                                    config.monthWeek = monthWeek;
-                                    config.monthWeekDay = monthWeekDay;
-                                }
-                            }
-                            onChange(config);
-                        }}
+                        onClick={handleSave}
                         className="btn btn-primary"
                         disabled={frequency === 'none'}
                     >
