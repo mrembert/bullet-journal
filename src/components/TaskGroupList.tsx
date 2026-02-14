@@ -88,7 +88,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
         });
 
         return { grouped, unassigned, projectIds };
-    }, [filteredBullets, groupByProject, state.collections]);
+    }, [filteredBullets, groupByProject, state.collections, state.bullets]);
 
     if (groupByProject) {
         return (
