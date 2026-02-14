@@ -408,6 +408,7 @@ body {
 
 .drag-handle {
     cursor: grab;
+    touch-action: none;
     color: hsl(var(--color-text-secondary));
     display: flex;
     align-items: center;
@@ -434,6 +435,7 @@ body {
     align-items: center;
     justify-content: center;
     cursor: grab;
+    touch-action: none;
     color: hsl(var(--color-text-secondary));
     padding: 0.25rem;
     margin-right: -0.25rem;

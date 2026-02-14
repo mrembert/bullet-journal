@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -33,22 +32,22 @@ export function SortableBulletItem({ bullet, isFocused, depth = 0 }: SortableBul
     };
 
     return (
-        <motion.div
-            ref={setNodeRef}
-            style={style}
-            layout
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-            transition={{ duration: 0.2 }}
-        >
-            <BulletItem
-                bullet={bullet}
-                isFocused={isFocused}
-                onMenuOpenChange={setMenuOpen}
-                depth={depth}
-                dragHandleProps={{ attributes, listeners }}
-            />
-        </motion.div>
+        <div ref={setNodeRef} style={style}>
+            <motion.div
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                transition={{ duration: 0.2 }}
+            >
+                <BulletItem
+                    bullet={bullet}
+                    isFocused={isFocused}
+                    onMenuOpenChange={setMenuOpen}
+                    depth={depth}
+                    dragHandleProps={{ attributes, listeners }}
+                />
+            </motion.div>
+        </div>
     );
 }
