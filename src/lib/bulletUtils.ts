@@ -34,3 +34,31 @@ export function calculateDepth(
 
     return depth;
 }
+
+/**
+ * Resolves the effective collection ID for a bullet by traversing up the parent chain.
+ * If the bullet has its own collectionId, that is returned.
+ * Otherwise, it looks for the nearest ancestor with a collectionId.
+ */
+export function getEffectiveCollectionId(
+    bullet: Bullet,
+    allBullets: Record<string, Bullet>
+): string | undefined | null {
+    if (bullet.collectionId) return bullet.collectionId;
+
+    let current = bullet;
+    const visited = new Set<string>([bullet.id]);
+
+    while (current.parentNoteId && allBullets[current.parentNoteId]) {
+        if (visited.has(current.parentNoteId)) break; // Cycle detection
+        visited.add(current.parentNoteId);
+
+        const parent = allBullets[current.parentNoteId];
+        if (parent.collectionId) return parent.collectionId;
+
+        current = parent;
+        if (visited.size > 50) break; // Max depth safety
+    }
+
+    return undefined;
+}

@@ -56,7 +56,8 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
                 content: initialContent || '',
                 type: 'task',
                 date: bullet.date,
-                collectionId: bullet.collectionId,
+                // Don't copy collectionId - inherit it dynamically from parentNoteId
+                collectionId: undefined,
                 parentNoteId: bulletId,
             }
         });

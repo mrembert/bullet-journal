@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useStore } from '../store';
-import { calculateDepth } from '../lib/bulletUtils';
+import { calculateDepth, getEffectiveCollectionId } from '../lib/bulletUtils';
 import { SortableBulletItem } from './SortableBulletItem';
 import { BulletEditor } from './BulletEditor';
 import { Eye, EyeOff, Grid, Layers } from 'lucide-react';
@@ -37,7 +37,10 @@ export function CollectionView() {
         if (!collection) return { bullets: [], visibleIdsSet: new Set<string>() };
 
         const filtered = Object.values(state.bullets)
-            .filter((b: Bullet) => b.collectionId === collectionId)
+            .filter((b: Bullet) => {
+                const effectiveId = getEffectiveCollectionId(b, state.bullets);
+                return effectiveId === collectionId;
+            })
             .filter((b: Bullet) => showCompleted || b.state !== 'completed')
             .sort((a: Bullet, b: Bullet) => {
                 if (sortByType) {
