@@ -16,9 +16,11 @@ import {
     SortableContext,
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
+    arrayMove,
 } from '@dnd-kit/sortable';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
+import { SortableProjectHeader } from './SortableProjectHeader';
 
 interface TaskGroupListProps {
     bullets: Bullet[];
@@ -90,104 +92,161 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
         return { grouped, unassigned, projectIds };
     }, [filteredBullets, groupByProject, state.collections, state.bullets]);
 
-    if (groupByProject) {
+    const { dispatch } = useStore();
+
+    const handleInternalDragEnd = useCallback((event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over) return;
+
+        if (active.id !== over.id) {
+            // 1. Handle Project Reordering
+            const allGroupIds = ['group-unassigned', ...projectIds];
+            const isActiveProject = allGroupIds.includes(active.id as string);
+            const isOverProject = allGroupIds.includes(over.id as string);
+
+            if (isActiveProject && isOverProject) {
+                const oldIndex = allGroupIds.indexOf(active.id as string);
+                const newIndex = allGroupIds.indexOf(over.id as string);
+                const newOrder = arrayMove(allGroupIds, oldIndex, newIndex);
+
+                // Update collections order (filter out unassigned)
+                const projectOnlyOrder = newOrder.filter(id => id !== 'group-unassigned');
+                const updates = projectOnlyOrder.map((pid, index) => ({
+                    id: pid,
+                    order: index * 1000
+                }));
+                dispatch({ type: 'REORDER_COLLECTIONS', payload: { items: updates } });
+                return;
+            }
+
+            // 2. Handle Bullet Reordering
+            const oldIndex = filteredBullets.findIndex(b => b.id === active.id);
+            let newIndex = filteredBullets.findIndex(b => b.id === over.id);
+
+            if (oldIndex !== -1) {
+                // If dropped over a project header, move to that project (at the start)
+                if (isOverProject) {
+                    const targetCollectionId = over.id === 'group-unassigned' ? null : over.id as string;
+                    dispatch({
+                        type: 'UPDATE_BULLET',
+                        payload: { id: active.id as string, collectionId: targetCollectionId }
+                    });
+
+                    // To reorder correctly, we should find the first bullet in that group
+                    const targetGroupBullets = over.id === 'group-unassigned' ? unassigned : grouped[over.id as string];
+                    if (targetGroupBullets && targetGroupBullets.length > 0) {
+                        newIndex = filteredBullets.findIndex(b => b.id === targetGroupBullets[0].id);
+                    } else {
+                        // Group is empty, just move it to the end or somewhere?
+                        // For now, let's just use arrayMove to the end of the filtered list or similar
+                        // Actually, finding the right index in a global list is hard if group is empty.
+                    }
+                } else if (newIndex !== -1) {
+                    // Dropped over another bullet. Update collectionId to match target bullet's project.
+                    const targetBullet = filteredBullets[newIndex];
+                    const targetCollectionId = getEffectiveCollectionId(targetBullet, state.bullets);
+
+                    if (filteredBullets[oldIndex].collectionId !== targetCollectionId) {
+                        dispatch({
+                            type: 'UPDATE_BULLET',
+                            payload: { id: active.id as string, collectionId: targetCollectionId }
+                        });
+                    }
+                }
+
+                if (newIndex !== -1) {
+                    const newBulletsOrder = arrayMove(filteredBullets, oldIndex, newIndex);
+                    const updates = newBulletsOrder.map((b, index) => ({
+                        id: b.id,
+                        order: index * 1000
+                    }));
+                    dispatch({ type: 'REORDER_BULLETS', payload: { items: updates } });
+                }
+            }
+        }
+    }, [projectIds, filteredBullets, unassigned, grouped, state.bullets, dispatch]);
+
+    const dndContent = useMemo(() => {
+        if (groupByProject) {
+            const allGroupIds = ['group-unassigned', ...projectIds];
+            return (
+                <SortableContext items={allGroupIds} strategy={verticalListSortingStrategy}>
+                    <div className="task-group-list">
+                        {unassigned.length > 0 || projectIds.length === 0 ? (
+                            <div className="group-section" style={{ marginBottom: '2rem' }}>
+                                <SortableProjectHeader id="group-unassigned" title="Inbox / Unassigned" isUnassigned />
+                                <SortableContext items={unassigned.map(b => b.id)} strategy={verticalListSortingStrategy}>
+                                    {unassigned.map((b: Bullet) => (
+                                        <SortableBulletItem
+                                            key={b.id}
+                                            bullet={b}
+                                            isFocused={b.id === focusedId}
+                                            depth={calculateDepth(b, state.bullets, visibleIdsSet)}
+                                        />
+                                    ))}
+                                </SortableContext>
+                            </div>
+                        ) : null}
+
+                        {projectIds.map(pid => (
+                            <div key={pid} className="group-section" style={{ marginBottom: '2rem' }}>
+                                <SortableProjectHeader id={pid} title={state.collections[pid].title} />
+                                <SortableContext items={grouped[pid].map(b => b.id)} strategy={verticalListSortingStrategy}>
+                                    {grouped[pid].map((b: Bullet) => (
+                                        <SortableBulletItem
+                                            key={b.id}
+                                            bullet={b}
+                                            isFocused={b.id === focusedId}
+                                            depth={calculateDepth(b, state.bullets, visibleIdsSet)}
+                                        />
+                                    ))}
+                                </SortableContext>
+                            </div>
+                        ))}
+
+                        {filteredBullets.length === 0 && (
+                            <div style={{ padding: '2rem', textAlign: 'center', color: 'hsl(var(--color-text-secondary))', opacity: 0.5 }}>
+                                No visible tasks.
+                            </div>
+                        )}
+                    </div>
+                </SortableContext>
+            );
+        }
+
         return (
-            <div className="task-group-list">
-                {unassigned.length > 0 && (
-                    <div className="group-section" style={{ marginBottom: '2rem' }}>
-                        <h3 style={{
-                            fontSize: '0.85rem',
-                            textTransform: 'uppercase',
-                            color: 'hsl(var(--color-text-secondary))',
-                            marginBottom: '0.5rem',
-                            letterSpacing: '0.05em',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                        }}>
-                            Inbox / Unassigned
-                        </h3>
-                        {/* DnD within unassigned? Maybe too complex for now, just render items */}
-                        {unassigned.map((b: Bullet) => (
-                            <BulletItem
+            <SortableContext
+                items={filteredBullets.map((b: Bullet) => b.id)}
+                strategy={verticalListSortingStrategy}
+            >
+                <div className="task-list">
+                    {filteredBullets.length === 0 ? (
+                        <div style={{ padding: '2rem', textAlign: 'center', color: 'hsl(var(--color-text-secondary))', opacity: 0.5 }}>
+                            No entries found.
+                        </div>
+                    ) : (
+                        filteredBullets.map((b: Bullet) => (
+                            <SortableBulletItem
                                 key={b.id}
                                 bullet={b}
                                 isFocused={b.id === focusedId}
                                 depth={calculateDepth(b, state.bullets, visibleIdsSet)}
                             />
-                        ))}
-                    </div>
-                )}
-
-                {projectIds.map(pid => (
-                    <div key={pid} className="group-section" style={{ marginBottom: '2rem' }}>
-                        <h3 style={{
-                            fontSize: '0.9rem',
-                            fontWeight: 600,
-                            marginBottom: '0.5rem',
-                            paddingBottom: '0.25rem',
-                            borderBottom: '1px solid hsl(var(--color-text-secondary) / 0.1)',
-                            color: 'hsl(var(--color-accent))'
-                        }}>
-                            {state.collections[pid].title}
-                        </h3>
-                        {grouped[pid].map((b: Bullet) => (
-                            <BulletItem
-                                key={b.id}
-                                bullet={b}
-                                isFocused={b.id === focusedId}
-                                depth={calculateDepth(b, state.bullets, visibleIdsSet)}
-                            />
-                        ))}
-                    </div>
-                ))}
-
-                {filteredBullets.length === 0 && (
-                    <div style={{ padding: '2rem', textAlign: 'center', color: 'hsl(var(--color-text-secondary))', opacity: 0.5 }}>
-                        No visible tasks.
-                    </div>
-                )}
-            </div>
+                        ))
+                    )}
+                </div>
+            </SortableContext>
         );
-    }
+    }, [groupByProject, unassigned, projectIds, grouped, focusedId, state.bullets, state.collections, visibleIdsSet, filteredBullets]);
 
-    /* 
-       Note: We only enable DnD if NOT grouped. Grouped DnD is tricky because order 
-       is global or per-collection? Currently order is global. 
-       If we want to reorder within a group, we'd need to filter the payload.
-       For now, disable DnD when grouped.
-    */
-
-
-
-    if (enableDragAndDrop && onDragEnd) {
+    if (enableDragAndDrop) {
         return (
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
-                onDragEnd={onDragEnd}
+                onDragEnd={onDragEnd || handleInternalDragEnd}
             >
-                <SortableContext
-                    items={filteredBullets.map((b: Bullet) => b.id)}
-                    strategy={verticalListSortingStrategy}
-                >
-                    <div className="task-list">
-                        {filteredBullets.length === 0 ? (
-                            <div style={{ padding: '2rem', textAlign: 'center', color: 'hsl(var(--color-text-secondary))', opacity: 0.5 }}>
-                                No entries found.
-                            </div>
-                        ) : (
-                            filteredBullets.map((b: Bullet) => (
-                                <SortableBulletItem
-                                    key={b.id}
-                                    bullet={b}
-                                    isFocused={b.id === focusedId}
-                                    depth={calculateDepth(b, state.bullets, visibleIdsSet)}
-                                />
-                            ))
-                        )}
-                    </div>
-                </SortableContext>
+                {dndContent}
             </DndContext>
         );
     }
