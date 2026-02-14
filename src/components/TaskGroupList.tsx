@@ -29,7 +29,7 @@ interface TaskGroupListProps {
 export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGroupListProps) {
     const { state } = useStore();
     const { focusedId, setVisibleIds } = useKeyboardFocus();
-    const { groupByProject, showCompleted, showMigrated } = state.preferences;
+    const { groupByProject, showCompleted } = state.preferences;
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -42,7 +42,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
             if (!showCompleted && b.state === 'completed') {
                 return false;
             }
-            if (!showMigrated && b.state === 'migrated') {
+            if (b.state === 'migrated') {
                 return false;
             }
             if (b.state === 'cancelled' && !showCompleted) { // Cancelled also hidden if completed hidden?
@@ -55,7 +55,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
             filteredBullets: filtered,
             visibleIdsSet: new Set(filtered.map((b: Bullet) => b.id))
         };
-    }, [bullets, showCompleted, showMigrated]);
+    }, [bullets, showCompleted]);
 
     // Register visible IDs for keyboard navigation
     useEffect(() => {

@@ -1,11 +1,10 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Trash, FileText, FolderInput, Calendar, MoreVertical, Repeat, XCircle, ArrowRight } from 'lucide-react';
+import { Trash, FileText, FolderInput, Calendar, MoreVertical, Repeat, XCircle } from 'lucide-react';
 import type { Bullet } from '../types';
 import { useStore } from '../store';
 import { BulletIcon } from './BulletIcon';
 import { DatePicker } from './DatePicker';
-import { MigrationPicker } from './MigrationPicker';
 import { ProjectPicker } from './ProjectPicker';
 import { RecurrencePicker } from './RecurrencePicker';
 import { generateRecurringDates, type RecurrenceConfig } from '../lib/recurrence';
@@ -27,7 +26,6 @@ interface BulletItemProps {
 export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet, isFocused, onMenuOpenChange, depth = 0 }, ref) => {
     const { state, dispatch } = useStore();
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [showMigrationPicker, setShowMigrationPicker] = useState(false);
     const [showProjectPicker, setShowProjectPicker] = useState(false);
     const [showRecurrencePicker, setShowRecurrencePicker] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -405,7 +403,6 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                 onClick={() => {
                                     setMenuOpen(false);
                                     setShowDatePicker(false);
-                                    setShowMigrationPicker(false);
                                     setShowProjectPicker(false);
                                     setShowRecurrencePicker(false);
                                 }}
@@ -424,25 +421,6 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                 display: 'flex',
                                 flexDirection: 'column',
                             }}>
-                                {/* Migrate */}
-                                <button
-                                    onClick={() => setShowMigrationPicker(!showMigrationPicker)}
-                                    className="btn btn-ghost"
-                                    style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
-                                >
-                                    <ArrowRight size={14} /> Migrate to...
-                                </button>
-                                {showMigrationPicker && (
-                                    <MigrationPicker
-                                        onSelectDate={(date) => {
-                                            dispatch({ type: 'MIGRATE_BULLET', payload: { id: bullet.id, targetDate: date } });
-                                            setShowMigrationPicker(false);
-                                            setMenuOpen(false);
-                                        }}
-                                        onCancel={() => setShowMigrationPicker(false)}
-                                    />
-                                )}
-
                                 {/* Date Picker */}
                                 <button
                                     onClick={() => setShowDatePicker(!showDatePicker)}

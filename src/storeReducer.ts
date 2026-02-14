@@ -1,5 +1,5 @@
-import type { AppState, Bullet, Action, BulletState } from './types';
-import { generateUUID, getTodayDate } from './lib/utils.ts';
+import type { AppState, Bullet, Action } from './types';
+import { getTodayDate } from './lib/utils.ts';
 
 
 // --- Initial State ---
@@ -13,7 +13,6 @@ export const initialState: AppState = {
     preferences: {
         groupByProject: false,
         showCompleted: true,
-        showMigrated: false,
         sortByType: false,
     },
 };
@@ -131,64 +130,6 @@ export function reducer(state: AppState, action: Action): AppState {
                 delete newBullets[id];
             });
             return { ...state, bullets: newBullets };
-        }
-        case 'MIGRATE_BULLET': {
-            const oldBullet = state.bullets[action.payload.id];
-            if (!oldBullet) return state;
-
-            // If it belongs to a collection, we just schedule it (update date), we don't clone it.
-            if (oldBullet.collectionId) {
-                return {
-                    ...state,
-                    bullets: {
-                        ...state.bullets,
-                        [oldBullet.id]: {
-                            ...oldBullet,
-                            date: action.payload.targetDate,
-                            updatedAt: Date.now(),
-                        }
-                    }
-                };
-            }
-
-            // Normal migration (Task -> Next Day)
-            const newId = action.payload.newId || generateUUID();
-            const now = Date.now();
-
-            const nextBullets = {
-                ...state.bullets,
-                [oldBullet.id]: { ...oldBullet, state: 'migrated' as BulletState, updatedAt: now },
-                [newId]: {
-                    ...oldBullet,
-                    id: newId,
-                    date: action.payload.targetDate,
-                    state: 'open' as BulletState,
-                    order: now,
-                    createdAt: now,
-                    updatedAt: now,
-                },
-            };
-
-            // If it came from a note, update the note's content to point to the new ID
-            if (oldBullet.parentNoteId && state.bullets[oldBullet.parentNoteId]) {
-                const parentNote = state.bullets[oldBullet.parentNoteId];
-                if (parentNote.longFormContent) {
-                    const oldStr = `"bulletId":"${oldBullet.id}"`;
-                    const newStr = `"bulletId":"${newId}"`;
-                    // Use a regex with global flag to replace all occurrences (in case of duplicates)
-                    const updatedContent = parentNote.longFormContent.split(oldStr).join(newStr);
-                    nextBullets[parentNote.id] = {
-                        ...parentNote,
-                        longFormContent: updatedContent,
-                        updatedAt: now
-                    };
-                }
-            }
-
-            return {
-                ...state,
-                bullets: nextBullets
-            };
         }
         case 'SET_VIEW': {
             return {

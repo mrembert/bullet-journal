@@ -17,7 +17,6 @@ import { NoteEditor } from './components/NoteEditor';
 import { useConfirmation } from './contexts/ConfirmationContext';
 import { KeyboardFocusProvider } from './contexts/KeyboardFocusContext';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { MigrationPicker } from './components/MigrationPicker';
 import { ProjectPicker } from './components/ProjectPicker';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { ExportDialog } from './components/ExportDialog';
@@ -48,7 +47,6 @@ function App() {
   const [newCollectionTitle, setNewCollectionTitle] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [migratingBulletId, setMigratingBulletId] = useState<string | null>(null);
   const [movingBulletId, setMovingBulletId] = useState<string | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -89,7 +87,6 @@ function App() {
 
   // Keyboard Shortcuts
   useKeyboardShortcuts({
-    onMigratePrompt: setMigratingBulletId,
     onMoveToProject: setMovingBulletId
   });
 
@@ -455,16 +452,6 @@ function App() {
           key={openNoteId}
           bulletId={openNoteId}
           onClose={closeNote}
-        />
-      )}
-
-      {migratingBulletId && (
-        <MigrationPicker
-          onSelectDate={(date) => {
-            dispatch({ type: 'MIGRATE_BULLET', payload: { id: migratingBulletId, targetDate: date } });
-            setMigratingBulletId(null);
-          }}
-          onCancel={() => setMigratingBulletId(null)}
         />
       )}
 

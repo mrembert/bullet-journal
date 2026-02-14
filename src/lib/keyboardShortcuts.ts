@@ -11,7 +11,6 @@ export interface KeyboardShortcutContext {
         setEditingId: (id: string | null) => void;
         dispatch: (action: Action) => void;
         openNote: (id: string) => void;
-        onMigratePrompt: (id: string) => void;
         onMoveToProject: (id: string) => void;
         requestConfirmation: (options: {
             title: string;
@@ -36,7 +35,7 @@ export function handleKeyboardShortcut(
     context: KeyboardShortcutContext
 ) {
     const { state, focusedId, isInput, actions } = context;
-    const { moveUp, moveDown, clearFocus, setEditingId, dispatch, openNote, onMigratePrompt, onMoveToProject, requestConfirmation } = actions;
+    const { moveUp, moveDown, clearFocus, setEditingId, dispatch, openNote, onMoveToProject, requestConfirmation } = actions;
 
     if (e.key === 'Escape') {
         e.preventDefault();
@@ -87,11 +86,6 @@ export function handleKeyboardShortcut(
         case 'n': {
             e.preventDefault();
             openNote(bullet.id);
-            break;
-        }
-        case 'm': {
-            e.preventDefault();
-            onMigratePrompt(bullet.id);
             break;
         }
         case 'p': {
