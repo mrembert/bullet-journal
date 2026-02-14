@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Trash, FileText, FolderInput, Calendar, MoreVertical, Edit2, Repeat, XCircle } from 'lucide-react';
+import { Trash, FileText, FolderInput, Calendar, MoreVertical, Repeat, XCircle } from 'lucide-react';
 import type { Bullet } from '../types';
 import { useStore } from '../store';
 import { BulletIcon } from './BulletIcon';
@@ -421,6 +421,25 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                 display: 'flex',
                                 flexDirection: 'column',
                             }}>
+                                {/* Date Picker */}
+                                <button
+                                    onClick={() => setShowDatePicker(!showDatePicker)}
+                                    className="btn btn-ghost"
+                                    style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
+                                >
+                                    <Calendar size={14} /> Assign Date
+                                </button>
+                                {showDatePicker && (
+                                    <DatePicker
+                                        currentDate={(bullet.date || undefined) as string | undefined}
+                                        onSelectDate={(date) => {
+                                            handleDateSelect(date);
+                                            setMenuOpen(false);
+                                        }}
+                                        onCancel={() => setShowDatePicker(false)}
+                                    />
+                                )}
+
                                 {/* Add / View Note */}
                                 <button
                                     onClick={() => { openNote(bullet.id); setMenuOpen(false); }}
@@ -430,14 +449,25 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                     <FileText size={14} /> {hasNote ? 'View Note' : 'Add Note'}
                                 </button>
 
-                                {/* Edit Text */}
+                                {/* Project Picker */}
                                 <button
-                                    onClick={handleEdit}
+                                    onClick={() => setShowProjectPicker(!showProjectPicker)}
                                     className="btn btn-ghost"
                                     style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
                                 >
-                                    <Edit2 size={14} /> Edit Text
+                                    <FolderInput size={14} /> Move to Project
                                 </button>
+                                {showProjectPicker && (
+                                    <ProjectPicker
+                                        currentCollectionId={bullet.collectionId || undefined}
+                                        onSelectProject={(collectionId) => {
+                                            dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, collectionId: collectionId || undefined } });
+                                            setShowProjectPicker(false);
+                                            setMenuOpen(false);
+                                        }}
+                                        onCancel={() => setShowProjectPicker(false)}
+                                    />
+                                )}
 
                                 {/* Recurring Actions */}
                                 {isRecurring ? (
@@ -468,45 +498,6 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                                             />
                                         )}
                                     </div>
-                                )}
-
-                                {/* Project Picker */}
-                                <button
-                                    onClick={() => setShowProjectPicker(!showProjectPicker)}
-                                    className="btn btn-ghost"
-                                    style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
-                                >
-                                    <FolderInput size={14} /> Move to Project
-                                </button>
-                                {showProjectPicker && (
-                                    <ProjectPicker
-                                        currentCollectionId={bullet.collectionId || undefined}
-                                        onSelectProject={(collectionId) => {
-                                            dispatch({ type: 'UPDATE_BULLET', payload: { id: bullet.id, collectionId: collectionId || undefined } });
-                                            setShowProjectPicker(false);
-                                            setMenuOpen(false);
-                                        }}
-                                        onCancel={() => setShowProjectPicker(false)}
-                                    />
-                                )}
-
-                                {/* Date Picker */}
-                                <button
-                                    onClick={() => setShowDatePicker(!showDatePicker)}
-                                    className="btn btn-ghost"
-                                    style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
-                                >
-                                    <Calendar size={14} /> Assign Date
-                                </button>
-                                {showDatePicker && (
-                                    <DatePicker
-                                        currentDate={(bullet.date || undefined) as string | undefined}
-                                        onSelectDate={(date) => {
-                                            handleDateSelect(date);
-                                            setMenuOpen(false);
-                                        }}
-                                        onCancel={() => setShowDatePicker(false)}
-                                    />
                                 )}
 
                                 {/* Delete */}
