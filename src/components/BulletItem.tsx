@@ -19,9 +19,10 @@ interface BulletItemProps {
     bullet: Bullet;
     isFocused?: boolean;
     onMenuOpenChange?: (open: boolean) => void;
+    depth?: number;
 }
 
-export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet, isFocused, onMenuOpenChange }, ref) => {
+export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet, isFocused, onMenuOpenChange, depth = 0 }, ref) => {
     const { state, dispatch } = useStore();
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showProjectPicker, setShowProjectPicker] = useState(false);
@@ -239,7 +240,8 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
                     alignItems: 'center',
                     gap: '0.75rem',
                     padding: '0.5rem 0.75rem', // Added some horizontal padding for focus ring
-                    margin: '0 -0.75rem', // Offset padding to keep alignment
+                    marginLeft: depth > 0 ? `${depth * 1.5 - 0.75}rem` : '-0.75rem',
+                    marginRight: '-0.75rem',
                     borderRadius: 'var(--radius-sm)',
                     opacity: isMigrated ? 0.5 : 1,
                     textDecoration: isCompleted ? 'line-through' : 'none',

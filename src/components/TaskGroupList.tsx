@@ -2,6 +2,7 @@ import { type Bullet } from '../types';
 import { SortableBulletItem } from './SortableBulletItem';
 import { useStore } from '../store';
 import { BulletItem } from './BulletItem';
+import { calculateDepth } from '../lib/bulletUtils';
 import {
     DndContext,
     closestCenter,
@@ -35,19 +36,26 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
-    // 1. Filter based on preferences
-    const filteredBullets = useMemo(() => bullets.filter(b => {
-        if (!showCompleted && b.state === 'completed') {
-            return false;
-        }
-        if (!showMigrated && b.state === 'migrated') {
-            return false;
-        }
-        if (b.state === 'cancelled' && !showCompleted) { // Cancelled also hidden if completed hidden?
-            return false;
-        }
-        return true;
-    }), [bullets, showCompleted, showMigrated]);
+    // 1. Filter based on preferences and calculate visible set
+    const { filteredBullets, visibleIdsSet } = useMemo(() => {
+        const filtered = bullets.filter(b => {
+            if (!showCompleted && b.state === 'completed') {
+                return false;
+            }
+            if (!showMigrated && b.state === 'migrated') {
+                return false;
+            }
+            if (b.state === 'cancelled' && !showCompleted) { // Cancelled also hidden if completed hidden?
+                return false;
+            }
+            return true;
+        });
+
+        return {
+            filteredBullets: filtered,
+            visibleIdsSet: new Set(filtered.map(b => b.id))
+        };
+    }, [bullets, showCompleted, showMigrated]);
 
     // Register visible IDs for keyboard navigation
     useEffect(() => {
@@ -100,7 +108,12 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                         </h3>
                         {/* DnD within unassigned? Maybe too complex for now, just render items */}
                         {unassigned.map(b => (
-                            <BulletItem key={b.id} bullet={b} isFocused={b.id === focusedId} />
+                            <BulletItem
+                                key={b.id}
+                                bullet={b}
+                                isFocused={b.id === focusedId}
+                                depth={calculateDepth(b, state.bullets, visibleIdsSet)}
+                            />
                         ))}
                     </div>
                 )}
@@ -118,7 +131,12 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                             {state.collections[pid].title}
                         </h3>
                         {grouped[pid].map(b => (
-                            <BulletItem key={b.id} bullet={b} isFocused={b.id === focusedId} />
+                            <BulletItem
+                                key={b.id}
+                                bullet={b}
+                                isFocused={b.id === focusedId}
+                                depth={calculateDepth(b, state.bullets, visibleIdsSet)}
+                            />
                         ))}
                     </div>
                 ))}
@@ -159,7 +177,12 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                             </div>
                         ) : (
                             filteredBullets.map(b => (
-                                <SortableBulletItem key={b.id} bullet={b} isFocused={b.id === focusedId} />
+                                <SortableBulletItem
+                                    key={b.id}
+                                    bullet={b}
+                                    isFocused={b.id === focusedId}
+                                    depth={calculateDepth(b, state.bullets, visibleIdsSet)}
+                                />
                             ))
                         )}
                     </div>
@@ -177,7 +200,12 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                 </div>
             ) : (
                 filteredBullets.map(b => (
-                    <BulletItem key={b.id} bullet={b} isFocused={b.id === focusedId} />
+                    <BulletItem
+                        key={b.id}
+                        bullet={b}
+                        isFocused={b.id === focusedId}
+                        depth={calculateDepth(b, state.bullets, visibleIdsSet)}
+                    />
                 ))
             )}
         </div>

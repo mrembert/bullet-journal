@@ -1,35 +1,41 @@
 
 import { useStore } from '../store';
 import { BulletItem } from './BulletItem';
+import { calculateDepth } from '../lib/bulletUtils';
 import { Archive, AlertCircle } from 'lucide-react';
 import { format, parseISO, isBefore, startOfDay } from 'date-fns';
 
 export function BacklogView() {
     const { state } = useStore();
-    const today = startOfDay(new Date());
 
-    const openTasks = Object.values(state.bullets)
-        .filter(b => {
-            // Must be a task
-            if (b.type !== 'task') return false;
-            // Must be open
-            if (b.state !== 'open') return false;
-            // Must be from a daily log (no collectionId)
-            // if (b.collectionId) return false; // Show project tasks too if they are undated or overdue
+    const { openTasks, visibleIdsSet } = useMemo(() => {
+        const today = startOfDay(new Date());
+        const filtered = Object.values(state.bullets)
+            .filter(b => {
+                // Must be a task
+                if (b.type !== 'task') return false;
+                // Must be open
+                if (b.state !== 'open') return false;
 
-            // Include if Undated OR Before Today
-            if (!b.date) return true;
+                // Include if Undated OR Before Today
+                if (!b.date) return true;
 
-            const bulletDate = parseISO(b.date);
-            return isBefore(bulletDate, today);
-        })
-        .sort((a, b) => {
-            // Undated first? Or last? Let's put Undated first.
-            if (!a.date && b.date) return -1;
-            if (a.date && !b.date) return 1;
-            if (!a.date && !b.date) return (a.order || 0) - (b.order || 0);
-            return (b.date || '').localeCompare(a.date || ''); // Descending date
-        });
+                const bulletDate = parseISO(b.date);
+                return isBefore(bulletDate, today);
+            })
+            .sort((a, b) => {
+                // Undated first? Or last? Let's put Undated first.
+                if (!a.date && b.date) return -1;
+                if (a.date && !b.date) return 1;
+                if (!a.date && !b.date) return (a.order || 0) - (b.order || 0);
+                return (b.date || '').localeCompare(a.date || ''); // Descending date
+            });
+
+        return {
+            openTasks: filtered,
+            visibleIdsSet: new Set(filtered.map(b => b.id))
+        };
+    }, [state.bullets]);
 
     const undatedTasks = openTasks.filter(b => !b.date);
     const datedTasks = openTasks.filter(b => b.date);
@@ -82,7 +88,11 @@ export function BacklogView() {
                             </h3>
                             <div>
                                 {undatedTasks.map(bullet => (
-                                    <BulletItem key={bullet.id} bullet={bullet} />
+                                    <BulletItem
+                                        key={bullet.id}
+                                        bullet={bullet}
+                                        depth={calculateDepth(bullet, state.bullets, visibleIdsSet)}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -109,7 +119,11 @@ export function BacklogView() {
                                 </h3>
                                 <div>
                                     {tasksForDate.map(bullet => (
-                                        <BulletItem key={bullet.id} bullet={bullet} />
+                                        <BulletItem
+                                            key={bullet.id}
+                                            bullet={bullet}
+                                            depth={calculateDepth(bullet, state.bullets, visibleIdsSet)}
+                                        />
                                     ))}
                                 </div>
                             </div>

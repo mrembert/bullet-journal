@@ -9,9 +9,10 @@ import { motion } from 'framer-motion';
 interface SortableBulletItemProps {
     bullet: Bullet;
     isFocused?: boolean;
+    depth?: number;
 }
 
-export function SortableBulletItem({ bullet, isFocused }: SortableBulletItemProps) {
+export function SortableBulletItem({ bullet, isFocused, depth = 0 }: SortableBulletItemProps) {
     const [menuOpen, setMenuOpen] = useState(false);
     const {
         attributes,
@@ -47,6 +48,7 @@ export function SortableBulletItem({ bullet, isFocused }: SortableBulletItemProp
                 bullet={bullet}
                 isFocused={isFocused}
                 onMenuOpenChange={setMenuOpen}
+                depth={depth}
             />
         </motion.div>
     );
