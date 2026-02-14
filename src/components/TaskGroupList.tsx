@@ -26,9 +26,10 @@ interface TaskGroupListProps {
     bullets: Bullet[];
     enableDragAndDrop?: boolean;
     onDragEnd?: (event: DragEndEvent) => void;
+    isRearrangeMode?: boolean;
 }
 
-export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGroupListProps) {
+export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd, isRearrangeMode }: TaskGroupListProps) {
     const { state } = useStore();
     const { focusedId, setVisibleIds } = useKeyboardFocus();
     const { groupByProject, showCompleted } = state.preferences;
@@ -171,7 +172,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
             const allGroupIds = ['group-unassigned', ...projectIds];
             return (
                 <SortableContext items={allGroupIds} strategy={verticalListSortingStrategy}>
-                    <div className="task-group-list">
+                    <div className={`task-group-list ${isRearrangeMode ? 'rearrange-active' : ''}`}>
                         {unassigned.length > 0 || projectIds.length === 0 ? (
                             <div className="group-section" style={{ marginBottom: '2rem' }}>
                                 <SortableProjectHeader id="group-unassigned" title="Inbox / Unassigned" isUnassigned />
@@ -219,7 +220,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                 items={filteredBullets.map((b: Bullet) => b.id)}
                 strategy={verticalListSortingStrategy}
             >
-                <div className="task-list">
+                <div className={`task-list ${isRearrangeMode ? 'rearrange-active' : ''}`}>
                     {filteredBullets.length === 0 ? (
                         <div style={{ padding: '2rem', textAlign: 'center', color: 'hsl(var(--color-text-secondary))', opacity: 0.5 }}>
                             No entries found.

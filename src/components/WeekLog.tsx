@@ -1,14 +1,15 @@
 import { useStore } from '../store';
 import { BulletEditor } from './BulletEditor';
 import { format, startOfWeek, addDays, isSameDay, parseISO, endOfWeek } from 'date-fns';
-import { ChevronLeft, ChevronRight, Grid, Layers, CheckSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Grid, Layers, CheckSquare, ArrowUpDown } from 'lucide-react';
 import { TaskGroupList } from './TaskGroupList';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export function WeekLog() {
     const { state, dispatch } = useStore();
     const { groupByProject, showCompleted, sortByType } = state.preferences;
+    const [isRearrangeMode, setIsRearrangeMode] = useState(false);
 
     // Use state.view.date as the anchor for the week
     const currentDate = parseISO(state.view.date);
@@ -99,6 +100,15 @@ export function WeekLog() {
                 justifyContent: 'flex-end'
             }}>
                 <button
+                    onClick={() => setIsRearrangeMode(!isRearrangeMode)}
+                    className={`btn ${isRearrangeMode ? 'btn-primary' : 'btn-ghost'} mobile-only`}
+                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                    title={isRearrangeMode ? "Done Rearranging" : "Rearrange Tasks"}
+                >
+                    <ArrowUpDown size={16} />
+                    {isRearrangeMode ? " Done" : " Rearrange"}
+                </button>
+                <button
                     onClick={toggleGrouping}
                     className={`btn ${groupByProject ? 'btn-primary' : 'btn-ghost'}`}
                     style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
@@ -137,7 +147,11 @@ export function WeekLog() {
                 flexDirection: 'column'
             }}>
                 <div style={{ flex: 1 }}>
-                    <TaskGroupList bullets={weekBullets} enableDragAndDrop={true} />
+                    <TaskGroupList
+                        bullets={weekBullets}
+                        enableDragAndDrop={true}
+                        isRearrangeMode={isRearrangeMode}
+                    />
                 </div>
 
                 <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)' }}>

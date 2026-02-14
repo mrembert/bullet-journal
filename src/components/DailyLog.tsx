@@ -1,14 +1,15 @@
 import { useStore } from '../store';
 import { BulletEditor } from './BulletEditor';
 import { TaskGroupList } from './TaskGroupList';
-import { CheckSquare, Grid, Layers } from 'lucide-react';
+import { CheckSquare, Grid, Layers, ArrowUpDown } from 'lucide-react';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export function DailyLog() {
     const { state, dispatch } = useStore();
     const { date } = state.view;
     const { groupByProject, showCompleted, sortByType } = state.preferences;
+    const [isRearrangeMode, setIsRearrangeMode] = useState(false);
 
     // Filter bullets for the current date
     const dailyBullets = useMemo(() => Object.values(state.bullets)
@@ -50,6 +51,15 @@ export function DailyLog() {
                 justifyContent: 'flex-end'
             }}>
                 <button
+                    onClick={() => setIsRearrangeMode(!isRearrangeMode)}
+                    className={`btn ${isRearrangeMode ? 'btn-primary' : 'btn-ghost'} mobile-only`}
+                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                    title={isRearrangeMode ? "Done Rearranging" : "Rearrange Tasks"}
+                >
+                    <ArrowUpDown size={16} />
+                    {isRearrangeMode ? " Done" : " Rearrange"}
+                </button>
+                <button
                     onClick={toggleGrouping}
                     className={`btn ${groupByProject ? 'btn-primary' : 'btn-ghost'}`}
                     style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
@@ -81,6 +91,7 @@ export function DailyLog() {
             <TaskGroupList
                 bullets={dailyBullets}
                 enableDragAndDrop={true}
+                isRearrangeMode={isRearrangeMode}
             />
 
             <BulletEditor />

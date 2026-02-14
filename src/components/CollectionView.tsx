@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import { calculateDepth, getEffectiveCollectionId } from '../lib/bulletUtils';
 import { SortableBulletItem } from './SortableBulletItem';
 import { BulletEditor } from './BulletEditor';
-import { Eye, EyeOff, Grid, Layers } from 'lucide-react';
+import { Eye, EyeOff, Grid, Layers, ArrowUpDown } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -29,6 +29,7 @@ export function CollectionView() {
     const { sortByType } = state.preferences;
     const { focusedId, setVisibleIds } = useKeyboardFocus();
     const [showCompleted, setShowCompleted] = useState(false);
+    const [isRearrangeMode, setIsRearrangeMode] = useState(false);
 
     const collection = collectionId ? state.collections[collectionId] : null;
 
@@ -107,26 +108,37 @@ export function CollectionView() {
                             {collection.title}
                         </h1>
                     </div>
-                    <button
-                        onClick={() => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'sortByType' } })}
-                        className={`btn ${sortByType ? 'btn-primary' : 'btn-ghost'}`}
-                        style={{ color: 'hsl(var(--color-text-secondary))', marginRight: '0.5rem' }}
-                        title={sortByType ? "Sorted by Type" : "Sort by Custom Order"}
-                    >
-                        {sortByType ? <Layers size={20} /> : <Grid size={20} />}
-                    </button>
-                    <button
-                        onClick={() => setShowCompleted(!showCompleted)}
-                        className="btn btn-ghost"
-                        style={{ color: 'hsl(var(--color-text-secondary))' }}
-                        title={showCompleted ? "Hide Completed" : "Show Completed"}
-                    >
-                        {showCompleted ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <button
+                            onClick={() => setIsRearrangeMode(!isRearrangeMode)}
+                            className={`btn ${isRearrangeMode ? 'btn-primary' : 'btn-ghost'} mobile-only`}
+                            style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', marginRight: '0.5rem', color: isRearrangeMode ? 'white' : 'hsl(var(--color-text-secondary))' }}
+                            title={isRearrangeMode ? "Done Rearranging" : "Rearrange Tasks"}
+                        >
+                            <ArrowUpDown size={20} />
+                            {isRearrangeMode ? " Done" : ""}
+                        </button>
+                        <button
+                            onClick={() => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'sortByType' } })}
+                            className={`btn ${sortByType ? 'btn-primary' : 'btn-ghost'}`}
+                            style={{ color: 'hsl(var(--color-text-secondary))', marginRight: '0.5rem' }}
+                            title={sortByType ? "Sorted by Type" : "Sort by Custom Order"}
+                        >
+                            {sortByType ? <Layers size={20} /> : <Grid size={20} />}
+                        </button>
+                        <button
+                            onClick={() => setShowCompleted(!showCompleted)}
+                            className="btn btn-ghost"
+                            style={{ color: 'hsl(var(--color-text-secondary))' }}
+                            title={showCompleted ? "Hide Completed" : "Show Completed"}
+                        >
+                            {showCompleted ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                    </div>
                 </div>
             </header>
 
-            <div className="collection-list">
+            <div className={`collection-list ${isRearrangeMode ? 'rearrange-active' : ''}`}>
                 {bullets.length === 0 && (
                     <div style={{ padding: '2rem', textAlign: 'center', color: 'hsl(var(--color-text-secondary))', opacity: 0.5 }}>
                         Empty collection. Start adding items below.
