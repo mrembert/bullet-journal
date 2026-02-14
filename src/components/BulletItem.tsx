@@ -80,37 +80,6 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
         setShowDatePicker(false);
     };
 
-    const handleUpdateFuture = () => {
-        if (!bullet.recurringId) return;
-
-        const futureBullets = Object.values(state.bullets).filter(b =>
-            b.recurringId === bullet.recurringId &&
-            b.id !== bullet.id &&
-            b.date && bullet.date && b.date > bullet.date
-        );
-
-        if (futureBullets.length === 0) {
-            showToast("No future events found.");
-            setMenuOpen(false);
-            return;
-        }
-
-        const ids = futureBullets.map(b => b.id);
-        dispatch({
-            type: 'UPDATE_BULLETS',
-            payload: {
-                ids,
-                updates: {
-                    content: bullet.content,
-                    type: bullet.type,
-                    longFormContent: bullet.longFormContent
-                }
-            }
-        });
-        showToast(`Updated ${ids.length} future events.`);
-        setMenuOpen(false);
-    };
-
     const handleStopRecurring = () => {
         requestConfirmation({
             title: 'Stop Repeating',
@@ -465,22 +434,13 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
 
                                 {/* Recurring Actions */}
                                 {isRecurring ? (
-                                    <>
-                                        <button
-                                            onClick={handleUpdateFuture}
-                                            className="btn btn-ghost"
-                                            style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
-                                        >
-                                            <Repeat size={14} /> Update Future Events
-                                        </button>
-                                        <button
-                                            onClick={handleStopRecurring}
-                                            className="btn btn-ghost"
-                                            style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
-                                        >
-                                            <XCircle size={14} /> Stop Repeating
-                                        </button>
-                                    </>
+                                    <button
+                                        onClick={handleStopRecurring}
+                                        className="btn btn-ghost"
+                                        style={{ justifyContent: 'flex-start', width: '100%', fontSize: '0.85rem' }}
+                                    >
+                                        <XCircle size={14} /> Stop Repeating
+                                    </button>
                                 ) : (
                                     <div style={{ position: 'relative' }}>
                                         <button
