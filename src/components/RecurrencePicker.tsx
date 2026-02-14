@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { RecurrenceConfig, RecurrenceFrequency } from '../lib/recurrence';
 import { getDay, getDate } from 'date-fns';
 import { X } from 'lucide-react';
@@ -36,11 +37,7 @@ export function RecurrencePicker({ startDate, initialConfig, onChange, onClose }
     const defaultMonthDay = getDate(startDate);
 
     // Determine default relative week (e.g. 1st Monday)
-    // Simple heuristic: (day - 1) / 7 + 1? No.
-    // E.g. 1st -> 1. 7th -> 1. 8th -> 2.
     const defaultMonthWeek = Math.floor((getDate(startDate) - 1) / 7) + 1;
-    // If it's the last occurrence, difficult to detect easily without checking end of month.
-    // For now default to Nth.
 
     const [monthlyType, setMonthlyType] = useState<'date' | 'relative'>('date');
     const [monthWeek, setMonthWeek] = useState(initialConfig?.monthWeek || defaultMonthWeek);
@@ -80,20 +77,8 @@ export function RecurrencePicker({ startDate, initialConfig, onChange, onClose }
         onChange(config);
     }, [frequency, interval, monthlyType, monthDay, monthWeek, monthWeekDay, onChange]);
 
-    // Refactored to act as a modal content instead of inline absolute positioning
-    return (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 2000
-        }} onClick={onClose}>
+    return createPortal(
+        <div className="picker-overlay" onClick={onClose}>
             <div className="recurrence-picker picker-panel" style={{
                 backgroundColor: 'hsl(var(--color-bg-primary))',
                 border: '1px solid hsl(var(--color-border))',
@@ -204,6 +189,7 @@ export function RecurrencePicker({ startDate, initialConfig, onChange, onClose }
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
