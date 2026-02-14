@@ -50,7 +50,7 @@ export function CollectionView() {
 
         return {
             bullets: filtered,
-            visibleIdsSet: new Set(filtered.map(b => b.id))
+            visibleIdsSet: new Set(filtered.map((b: Bullet) => b.id))
         };
     }, [collection, collectionId, state.bullets, showCompleted, sortByType]);
 

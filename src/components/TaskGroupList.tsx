@@ -38,7 +38,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
 
     // 1. Filter based on preferences and calculate visible set
     const { filteredBullets, visibleIdsSet } = useMemo(() => {
-        const filtered = bullets.filter(b => {
+        const filtered = bullets.filter((b: Bullet) => {
             if (!showCompleted && b.state === 'completed') {
                 return false;
             }
@@ -53,13 +53,13 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
 
         return {
             filteredBullets: filtered,
-            visibleIdsSet: new Set(filtered.map(b => b.id))
+            visibleIdsSet: new Set(filtered.map((b: Bullet) => b.id))
         };
     }, [bullets, showCompleted, showMigrated]);
 
     // Register visible IDs for keyboard navigation
     useEffect(() => {
-        setVisibleIds(filteredBullets.map(b => b.id));
+        setVisibleIds(filteredBullets.map((b: Bullet) => b.id));
         return () => setVisibleIds([]);
     }, [filteredBullets, setVisibleIds]);
 
@@ -72,7 +72,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
         const grouped: Record<string, Bullet[]> = {};
         const unassigned: Bullet[] = [];
 
-        filteredBullets.forEach(b => {
+        filteredBullets.forEach((b: Bullet) => {
             if (b.collectionId && state.collections[b.collectionId]) {
                 if (!grouped[b.collectionId]) grouped[b.collectionId] = [];
                 grouped[b.collectionId].push(b);
@@ -107,7 +107,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                             Inbox / Unassigned
                         </h3>
                         {/* DnD within unassigned? Maybe too complex for now, just render items */}
-                        {unassigned.map(b => (
+                        {unassigned.map((b: Bullet) => (
                             <BulletItem
                                 key={b.id}
                                 bullet={b}
@@ -130,7 +130,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                         }}>
                             {state.collections[pid].title}
                         </h3>
-                        {grouped[pid].map(b => (
+                        {grouped[pid].map((b: Bullet) => (
                             <BulletItem
                                 key={b.id}
                                 bullet={b}
@@ -167,7 +167,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                 onDragEnd={onDragEnd}
             >
                 <SortableContext
-                    items={filteredBullets.map(b => b.id)}
+                    items={filteredBullets.map((b: Bullet) => b.id)}
                     strategy={verticalListSortingStrategy}
                 >
                     <div className="task-list">
@@ -176,7 +176,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                                 No entries found.
                             </div>
                         ) : (
-                            filteredBullets.map(b => (
+                            filteredBullets.map((b: Bullet) => (
                                 <SortableBulletItem
                                     key={b.id}
                                     bullet={b}
@@ -199,7 +199,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
                     No entries found.
                 </div>
             ) : (
-                filteredBullets.map(b => (
+                filteredBullets.map((b: Bullet) => (
                     <BulletItem
                         key={b.id}
                         bullet={b}
