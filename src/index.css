@@ -396,3 +396,34 @@ body {
     padding-bottom: calc(1rem + env(safe-area-inset-bottom));
   }
 }
+/* DnD Grouped View Styles */
+.project-group-header {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid hsl(var(--color-text-secondary) / 0.1);
+    color: hsl(var(--color-accent));
+}
+
+.drag-handle {
+    cursor: grab;
+    color: hsl(var(--color-text-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.drag-handle:hover {
+    opacity: 1 !important;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.group-section {
+    position: relative;
+    transition: transform 0.2s, opacity 0.2s;
+}

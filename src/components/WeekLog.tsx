@@ -137,7 +137,7 @@ export function WeekLog() {
                 flexDirection: 'column'
             }}>
                 <div style={{ flex: 1 }}>
-                    <TaskGroupList bullets={weekBullets} />
+                    <TaskGroupList bullets={weekBullets} enableDragAndDrop={true} />
                 </div>
 
                 <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)' }}>
