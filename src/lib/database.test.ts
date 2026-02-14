@@ -1,7 +1,7 @@
 import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import { subscribeToUserDataLogic, performActionInFirestoreLogic } from './database.logic.ts';
-import type { AppState, Action } from '../types.ts';
+import type { Action } from '../types.ts';
 
 // Mock dependencies
 const mockCollection = mock.fn();
@@ -92,13 +92,6 @@ describe('database.logic', () => {
     });
 
     describe('performActionInFirestoreLogic', () => {
-        const initialState: AppState = {
-            bullets: {},
-            collections: {},
-            view: { mode: 'daily', date: '2023-01-01', collectionId: undefined },
-            preferences: { groupByProject: false, showCompleted: true, sortByType: false }
-        };
-
         it('should handle ADD_BULLET', async () => {
             const action: Action = {
                 type: 'ADD_BULLET',
@@ -111,7 +104,7 @@ describe('database.logic', () => {
                 return 'user-ref';
             });
 
-            await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
+            await performActionInFirestoreLogic(deps, mockDb, mockUid, action);
 
             assert.strictEqual(mockSetDoc.mock.callCount(), 1);
             const callArgs = mockSetDoc.mock.calls[0].arguments;
@@ -132,7 +125,7 @@ describe('database.logic', () => {
                 return 'user-ref';
             });
 
-            await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
+            await performActionInFirestoreLogic(deps, mockDb, mockUid, action);
 
             assert.strictEqual(mockUpdateDoc.mock.callCount(), 1);
             const callArgs = mockUpdateDoc.mock.calls[0].arguments;
@@ -152,7 +145,7 @@ describe('database.logic', () => {
                 return 'user-ref';
             });
 
-            await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
+            await performActionInFirestoreLogic(deps, mockDb, mockUid, action);
 
             assert.strictEqual(mockDeleteDoc.mock.callCount(), 1);
             assert.strictEqual(mockDeleteDoc.mock.calls[0].arguments[0], 'bullet-ref-b1');
@@ -170,7 +163,7 @@ describe('database.logic', () => {
                 return 'user-ref';
             });
 
-             await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
+             await performActionInFirestoreLogic(deps, mockDb, mockUid, action);
 
              assert.strictEqual(mockSetDoc.mock.callCount(), 1);
              const callArgs = mockSetDoc.mock.calls[0].arguments;
@@ -190,7 +183,7 @@ describe('database.logic', () => {
                 return 'user-ref';
             });
 
-             await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
+             await performActionInFirestoreLogic(deps, mockDb, mockUid, action);
 
              assert.strictEqual(mockUpdateDoc.mock.callCount(), 1);
              const callArgs = mockUpdateDoc.mock.calls[0].arguments;
@@ -210,7 +203,7 @@ describe('database.logic', () => {
                 return 'user-ref';
             });
 
-             await performActionInFirestoreLogic(deps, mockDb, mockUid, action, initialState);
+             await performActionInFirestoreLogic(deps, mockDb, mockUid, action);
 
              assert.strictEqual(mockDeleteDoc.mock.callCount(), 1);
              assert.strictEqual(mockDeleteDoc.mock.calls[0].arguments[0], 'col-ref-c1');

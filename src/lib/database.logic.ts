@@ -62,8 +62,7 @@ export async function performActionInFirestoreLogic(
     deps: DatabaseDeps,
     db: Firestore,
     uid: string,
-    action: Action,
-    currentState: AppState
+    action: Action
 ) {
     const usersRef = deps.doc(db, 'users', uid);
 
