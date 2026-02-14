@@ -29,8 +29,7 @@ export function subscribeToUserData(uid: string, onDataChange: (data: Partial<Ap
     return subscribeToUserDataLogic(deps, db, uid, onDataChange);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function performActionInFirestore(uid: string, action: Action, currentState: AppState) {
+export async function performActionInFirestore(uid: string, action: Action) {
     if (!db) {
         console.error("Firebase Firestore not initialized");
         return;
