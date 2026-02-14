@@ -427,3 +427,45 @@ body {
     position: relative;
     transition: transform 0.2s, opacity 0.2s;
 }
+
+/* Drag Handle Styles */
+.task-drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    color: hsl(var(--color-text-secondary));
+    padding: 0.25rem;
+    margin-right: -0.25rem;
+    border-radius: var(--radius-sm);
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    /* Default visibility (Mobile / Base) */
+    opacity: 0.5;
+    min-width: 24px; /* Ensure touch target isn't too small visually */
+    min-height: 24px;
+}
+
+.task-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Desktop Hover Behavior */
+@media (min-width: 769px) {
+    .task-drag-handle {
+        opacity: 0;
+    }
+
+    .task-item:hover .task-drag-handle {
+        opacity: 0.5;
+    }
+
+    .task-item:hover .task-drag-handle:hover {
+        opacity: 1;
+        background-color: hsl(var(--color-text-secondary) / 0.1);
+    }
+
+    /* Show when keyboard focused */
+    .task-item.keyboard-focused .task-drag-handle {
+        opacity: 0.5;
+    }
+}
