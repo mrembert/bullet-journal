@@ -86,7 +86,6 @@ export function BulletEditor({ defaultDate, autoFocus = false }: { defaultDate?:
                         type="button"
                         onClick={() => {
                             setShowProjectPicker(!showProjectPicker);
-                            setShowRecurrencePicker(false);
                         }}
                         className="btn btn-ghost"
                         style={{
