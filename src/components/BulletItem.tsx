@@ -14,6 +14,7 @@ import { useConfirmation } from '../contexts/ConfirmationContext';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '../contexts/ToastContext';
+import { getEffectiveCollectionId } from '../lib/bulletUtils';
 
 interface BulletItemProps {
     bullet: Bullet;
@@ -39,8 +40,12 @@ export const BulletItem = forwardRef<HTMLDivElement, BulletItemProps>(({ bullet,
     const { editingId, setEditingId } = useKeyboardFocus();
     const { showToast } = useToast();
 
-    const collection = bullet.collectionId ? state.collections[bullet.collectionId] : null;
-    const showCollectionTag = collection && state.view.collectionId !== bullet.collectionId;
+    const effectiveCollectionId = getEffectiveCollectionId(bullet, state.bullets);
+    const collection = effectiveCollectionId ? state.collections[effectiveCollectionId] : null;
+    const showCollectionTag = collection
+        && state.view.collectionId !== effectiveCollectionId
+        && !state.preferences.groupByProject
+        && depth === 0;
 
     const isEditing = editingId === bullet.id;
     const [editContent, setEditContent] = useState(bullet.content);

@@ -2,7 +2,7 @@ import { type Bullet } from '../types';
 import { SortableBulletItem } from './SortableBulletItem';
 import { useStore } from '../store';
 import { BulletItem } from './BulletItem';
-import { calculateDepth } from '../lib/bulletUtils';
+import { calculateDepth, getEffectiveCollectionId } from '../lib/bulletUtils';
 import {
     DndContext,
     closestCenter,
@@ -73,9 +73,10 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd }: TaskGro
         const unassigned: Bullet[] = [];
 
         filteredBullets.forEach((b: Bullet) => {
-            if (b.collectionId && state.collections[b.collectionId]) {
-                if (!grouped[b.collectionId]) grouped[b.collectionId] = [];
-                grouped[b.collectionId].push(b);
+            const collectionId = getEffectiveCollectionId(b, state.bullets);
+            if (collectionId && state.collections[collectionId]) {
+                if (!grouped[collectionId]) grouped[collectionId] = [];
+                grouped[collectionId].push(b);
             } else {
                 unassigned.push(b);
             }
