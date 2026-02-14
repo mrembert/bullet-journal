@@ -238,7 +238,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd, isRearran
                 </div>
             </SortableContext>
         );
-    }, [groupByProject, unassigned, projectIds, grouped, focusedId, state.bullets, state.collections, visibleIdsSet, filteredBullets]);
+    }, [groupByProject, unassigned, projectIds, grouped, focusedId, state.bullets, state.collections, visibleIdsSet, filteredBullets, isRearrangeMode]);
 
     if (enableDragAndDrop) {
         return (
