@@ -62,4 +62,5 @@ export type Action =
     | { type: 'TOGGLE_PREFERENCE'; payload: { key: keyof AppState['preferences'] } }
     | { type: 'LOAD_DATA'; payload: Partial<AppState> } // Partial loading for sync
     | { type: 'RESTORE_BULLET'; payload: Bullet }
+    | { type: 'RESTORE_BULLETS'; payload: Bullet[] }
     | { type: 'UNDO'; payload?: void };

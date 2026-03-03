@@ -1,15 +1,21 @@
 import { useStore } from '../store';
 import { BulletEditor } from './BulletEditor';
 import { TaskGroupList } from './TaskGroupList';
-import { CheckSquare, Grid, Layers, ArrowUpDown } from 'lucide-react';
+import { CheckSquare, Grid, Layers, ArrowUpDown, MoveRight, Calendar, ArrowRight } from 'lucide-react';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
 import { useEffect, useMemo, useState } from 'react';
+import { addDays, format, parseISO } from 'date-fns';
+import { useToast } from '../contexts/ToastContext';
+import { DatePicker } from './DatePicker';
 
 export function DailyLog() {
     const { state, dispatch } = useStore();
     const { date } = state.view;
     const { groupByProject, showCompleted, sortByType } = state.preferences;
     const [isRearrangeMode, setIsRearrangeMode] = useState(false);
+    const [showMoveMenu, setShowMoveMenu] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const { showToast } = useToast();
 
     // Filter bullets for the current date
     const dailyBullets = useMemo(() => Object.values(state.bullets)
@@ -28,6 +34,30 @@ export function DailyLog() {
             }
             return (a.order || 0) - (b.order || 0);
         }), [state.bullets, date, sortByType, showCompleted]);
+
+    const openTasks = useMemo(() => dailyBullets.filter(b => b.state === 'open' && b.type === 'task'), [dailyBullets]);
+
+    const handleMoveToTomorrow = () => {
+        const tomorrow = format(addDays(parseISO(date), 1), 'yyyy-MM-dd');
+        handleMoveToDate(tomorrow);
+    };
+
+    const handleMoveToDate = (targetDate: string | null) => {
+        if (!targetDate) return;
+        const ids = openTasks.map(t => t.id);
+        if (ids.length > 0) {
+            dispatch({
+                type: 'UPDATE_BULLETS',
+                payload: {
+                    ids,
+                    updates: { date: targetDate }
+                }
+            });
+            showToast(`Moved ${ids.length} tasks to ${targetDate}`);
+        }
+        setShowMoveMenu(false);
+        setShowDatePicker(false);
+    };
 
     const toggleGrouping = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'groupByProject' } });
     const toggleCompleted = () => dispatch({ type: 'TOGGLE_PREFERENCE', payload: { key: 'showCompleted' } });
@@ -86,6 +116,60 @@ export function DailyLog() {
                     {sortByType ? <Layers size={16} /> : <Grid size={16} />}
                     {sortByType ? " By Type" : " Custom"}
                 </button>
+
+                <div style={{ position: 'relative' }}>
+                    <button
+                        onClick={() => setShowMoveMenu(!showMoveMenu)}
+                        className={`btn ${showMoveMenu ? 'btn-primary' : 'btn-ghost'}`}
+                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                        title="Move unfinished tasks"
+                        disabled={openTasks.length === 0}
+                    >
+                        <MoveRight size={16} />
+                        {" Move Open"}
+                    </button>
+                    {showMoveMenu && (
+                        <>
+                            <div
+                                className="picker-overlay"
+                                style={{ background: 'transparent' }}
+                                onClick={() => setShowMoveMenu(false)}
+                            />
+                            <div className="picker-panel" style={{
+                                position: 'absolute',
+                                top: '100%',
+                                right: 0,
+                                zIndex: 100,
+                                marginTop: '0.5rem',
+                                minWidth: '150px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.25rem'
+                            }}>
+                                <button
+                                    onClick={handleMoveToTomorrow}
+                                    className="btn btn-ghost"
+                                    style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.9rem' }}
+                                >
+                                    <ArrowRight size={14} /> Next Day
+                                </button>
+                                <button
+                                    onClick={() => setShowDatePicker(true)}
+                                    className="btn btn-ghost"
+                                    style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.9rem' }}
+                                >
+                                    <Calendar size={14} /> Choose Date...
+                                </button>
+                            </div>
+                        </>
+                    )}
+                    {showDatePicker && (
+                        <DatePicker
+                            onSelectDate={handleMoveToDate}
+                            onCancel={() => setShowDatePicker(false)}
+                        />
+                    )}
+                </div>
             </div>
 
             <TaskGroupList

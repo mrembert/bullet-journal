@@ -90,6 +90,24 @@ export async function performActionInFirestoreLogic(
                 });
                 break;
             }
+            case 'RESTORE_BULLETS': {
+                const batch = deps.writeBatch(db);
+                const now = Date.now();
+                action.payload.forEach(bullet => {
+                    const { id, ...data } = bullet;
+                    const cleanData = Object.fromEntries(
+                        Object.entries(data).filter(([, v]) => v !== undefined)
+                    );
+                    const ref = deps.doc(usersRef, 'bullets', id);
+                    batch.set(ref, {
+                        ...cleanData,
+                        id,
+                        updatedAt: now
+                    });
+                });
+                await batch.commit();
+                break;
+            }
             case 'ADD_BULLETS': {
                 const batch = deps.writeBatch(db);
                 action.payload.bullets.forEach(bullet => {
