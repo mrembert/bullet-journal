@@ -131,15 +131,14 @@ export function DailyLog() {
                     {showMoveMenu && (
                         <>
                             <div
-                                className="picker-overlay"
-                                style={{ background: 'transparent' }}
+                                style={{ position: 'fixed', inset: 0, zIndex: 90 }}
                                 onClick={() => setShowMoveMenu(false)}
                             />
                             <div className="picker-panel" style={{
                                 position: 'absolute',
                                 top: '100%',
                                 right: 0,
-                                zIndex: 100,
+                                zIndex: 91,
                                 marginTop: '0.5rem',
                                 minWidth: '150px',
                                 display: 'flex',
@@ -147,14 +146,20 @@ export function DailyLog() {
                                 gap: '0.25rem'
                             }}>
                                 <button
-                                    onClick={handleMoveToTomorrow}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMoveToTomorrow();
+                                    }}
                                     className="btn btn-ghost"
                                     style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.9rem' }}
                                 >
                                     <ArrowRight size={14} /> Next Day
                                 </button>
                                 <button
-                                    onClick={() => setShowDatePicker(true)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowDatePicker(true);
+                                    }}
                                     className="btn btn-ghost"
                                     style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.9rem' }}
                                 >
