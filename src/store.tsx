@@ -77,6 +77,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 if (bullet) {
                     undoStack.current = [{ type: 'RESTORE_BULLET', payload: bullet }];
                 }
+            } else if (enhancedAction.type === 'UPDATE_BULLETS') {
+                const previousBullets = enhancedAction.payload.ids
+                    .map((id: string) => state.bullets[id])
+                    .filter(Boolean);
+                if (previousBullets.length > 0) {
+                    undoStack.current = [{ type: 'RESTORE_BULLETS', payload: previousBullets }];
+                }
             } else if (
                 enhancedAction.type === 'ADD_COLLECTION' ||
                 enhancedAction.type === 'UPDATE_COLLECTION' ||

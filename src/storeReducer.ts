@@ -74,6 +74,16 @@ export function reducer(state: AppState, action: Action): AppState {
                 },
             };
         }
+        case 'RESTORE_BULLETS': {
+            const newBullets = { ...state.bullets };
+            action.payload.forEach(bullet => {
+                newBullets[bullet.id] = bullet;
+            });
+            return {
+                ...state,
+                bullets: newBullets,
+            };
+        }
         case 'UPDATE_BULLETS': {
             const newBullets = { ...state.bullets };
             const now = Date.now();
