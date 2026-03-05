@@ -139,11 +139,11 @@ function App() {
     );
   }
 
-  if (false) {
+  if (!user) {
     return <Login />;
   }
 
-  if (false) {
+  if (!isAuthorized) {
     return <Unauthorized />;
   }
 
