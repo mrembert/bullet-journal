@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import type { BulletType } from '../types';
 import { generateUUID } from '../lib/utils';
 import { ProjectPicker } from './ProjectPicker';
-import { Folder } from 'lucide-react';
+import { Folder, CornerDownLeft } from 'lucide-react';
 
 export function BulletEditor({ defaultDate, autoFocus = false }: { defaultDate?: string, autoFocus?: boolean }) {
     const [content, setContent] = useState('');
@@ -80,51 +80,68 @@ export function BulletEditor({ defaultDate, autoFocus = false }: { defaultDate?:
                 style={{ flex: 1 }}
             />
 
-            {!state.view.collectionId && (
-                <div style={{ position: 'relative' }}>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setShowProjectPicker(!showProjectPicker);
-                        }}
-                        className="btn btn-ghost"
-                        style={{
-                            padding: '0.5rem',
-                            border: '1px solid hsl(var(--color-text-secondary) / 0.2)',
-                            backgroundColor: 'hsl(var(--color-bg-primary))',
-                            color: selectedProject ? 'hsl(var(--color-accent))' : 'hsl(var(--color-text-secondary))',
-                            fontSize: '0.85rem',
-                            maxWidth: '140px',
-                            justifyContent: 'space-between',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: 'flex',
-                            alignItems: 'center'
-                        }}
-                        title="Select Project (Alt+P)"
-                    >
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {selectedProject ? selectedProject.title : 'No Project'}
-                        </span>
-                        <Folder size={14} style={{ marginLeft: '0.25rem', flexShrink: 0 }} />
-                    </button>
-
-                    {showProjectPicker && (
-                        <ProjectPicker
-                            currentCollectionId={selectedCollectionId}
-                            onSelectProject={(id) => {
-                                setSelectedCollectionId(id || '');
-                                setShowProjectPicker(false);
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', width: '100%', justifyContent: 'flex-end' }}>
+                {!state.view.collectionId && (
+                    <div style={{ position: 'relative' }}>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setShowProjectPicker(!showProjectPicker);
                             }}
-                            onCancel={() => setShowProjectPicker(false)}
-                        />
-                    )}
-                </div>
-            )}
+                            className="btn btn-ghost"
+                            style={{
+                                padding: '0.5rem',
+                                border: '1px solid hsl(var(--color-text-secondary) / 0.2)',
+                                backgroundColor: 'hsl(var(--color-bg-primary))',
+                                color: selectedProject ? 'hsl(var(--color-accent))' : 'hsl(var(--color-text-secondary))',
+                                fontSize: '0.85rem',
+                                maxWidth: '140px',
+                                justifyContent: 'space-between',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: 'flex',
+                                alignItems: 'center'
+                            }}
+                            title="Select Project (Alt+P)"
+                        >
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {selectedProject ? selectedProject.title : 'No Project'}
+                            </span>
+                            <Folder size={14} style={{ marginLeft: '0.25rem', flexShrink: 0 }} />
+                        </button>
 
-            {/* Optional: Add a hidden submit button for some older browsers if needed */}
-            <button type="submit" style={{ display: 'none' }} aria-hidden="true" />
+                        {showProjectPicker && (
+                            <ProjectPicker
+                                currentCollectionId={selectedCollectionId}
+                                onSelectProject={(id) => {
+                                    setSelectedCollectionId(id || '');
+                                    setShowProjectPicker(false);
+                                }}
+                                onCancel={() => setShowProjectPicker(false)}
+                            />
+                        )}
+                    </div>
+                )}
+
+                <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={!content.trim()}
+                    style={{
+                        padding: '0.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: content.trim() ? 1 : 0.5,
+                        cursor: content.trim() ? 'pointer' : 'default',
+                        flexShrink: 0
+                    }}
+                    title="Add Task"
+                >
+                    <CornerDownLeft size={16} />
+                </button>
+            </div>
         </form>
     );
 }
