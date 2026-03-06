@@ -80,7 +80,7 @@ export function BulletEditor({ defaultDate, autoFocus = false }: { defaultDate?:
                 style={{ flex: 1 }}
             />
 
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', width: '100%', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'flex-end' }}>
                 {!state.view.collectionId && (
                     <div style={{ position: 'relative' }}>
                         <button
