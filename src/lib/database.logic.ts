@@ -190,10 +190,12 @@ export async function performActionInFirestoreLogic(
                 break;
             }
             case 'REORDER_BULLETS': {
-                const batchPromises = action.payload.items.map(item =>
-                    deps.updateDoc(deps.doc(usersRef, 'bullets', item.id), { order: item.order })
-                );
-                await Promise.all(batchPromises);
+                const batch = deps.writeBatch(db);
+                action.payload.items.forEach(item => {
+                    const ref = deps.doc(usersRef, 'bullets', item.id);
+                    batch.update(ref, { order: item.order });
+                });
+                await batch.commit();
                 break;
             }
         }
