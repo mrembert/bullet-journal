@@ -10,6 +10,7 @@ const mockOnSnapshot = mock.fn();
 const mockSetDoc = mock.fn();
 const mockUpdateDoc = mock.fn();
 const mockDeleteDoc = mock.fn();
+const mockWriteBatch = mock.fn();
 
 const deps = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +25,8 @@ const deps = {
     updateDoc: mockUpdateDoc as any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     deleteDoc: mockDeleteDoc as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    writeBatch: mockWriteBatch as any,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,6 +41,7 @@ describe('database.logic', () => {
         mockSetDoc.mock.resetCalls();
         mockUpdateDoc.mock.resetCalls();
         mockDeleteDoc.mock.resetCalls();
+        mockWriteBatch.mock.resetCalls();
     });
 
     describe('subscribeToUserDataLogic', () => {
@@ -207,6 +211,47 @@ describe('database.logic', () => {
 
              assert.strictEqual(mockDeleteDoc.mock.callCount(), 1);
              assert.strictEqual(mockDeleteDoc.mock.calls[0].arguments[0], 'col-ref-c1');
+        });
+
+        it('should handle REORDER_BULLETS', async () => {
+             const action: Action = {
+                type: 'REORDER_BULLETS',
+                payload: {
+                    items: [
+                        { id: 'b1', order: 100 },
+                        { id: 'b2', order: 200 }
+                    ]
+                }
+            };
+
+            const mockBatchUpdate = mock.fn();
+            const mockBatchCommit = mock.fn(async () => {});
+
+            mockWriteBatch.mock.mockImplementation(() => ({
+                update: mockBatchUpdate,
+                commit: mockBatchCommit
+            }));
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            mockDoc.mock.mockImplementation((...args: any[]) => {
+                if (args.includes('bullets')) return `bullet-ref-${args[2]}`;
+                return 'user-ref';
+            });
+
+             await performActionInFirestoreLogic(deps, mockDb, mockUid, action);
+
+             assert.strictEqual(mockWriteBatch.mock.callCount(), 1);
+             assert.strictEqual(mockBatchUpdate.mock.callCount(), 2);
+
+             const updateArgs1 = mockBatchUpdate.mock.calls[0].arguments;
+             assert.strictEqual(updateArgs1[0], 'bullet-ref-b1');
+             assert.strictEqual(updateArgs1[1].order, 100);
+
+             const updateArgs2 = mockBatchUpdate.mock.calls[1].arguments;
+             assert.strictEqual(updateArgs2[0], 'bullet-ref-b2');
+             assert.strictEqual(updateArgs2[1].order, 200);
+
+             assert.strictEqual(mockBatchCommit.mock.callCount(), 1);
         });
     });
 });
