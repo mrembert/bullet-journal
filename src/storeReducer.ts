@@ -2,6 +2,26 @@ import type { AppState, Bullet, Action } from './types';
 import { getTodayDate } from './lib/utils.ts';
 
 
+const defaultPreferences = {
+    groupByProject: false,
+    showCompleted: true,
+    sortByType: false,
+};
+
+function getInitialPreferences() {
+    try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            const stored = window.localStorage.getItem('preferences');
+            if (stored) {
+                return { ...defaultPreferences, ...JSON.parse(stored) };
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to parse preferences from localStorage', e);
+    }
+    return defaultPreferences;
+}
+
 // --- Initial State ---
 export const initialState: AppState = {
     bullets: {},
@@ -10,11 +30,7 @@ export const initialState: AppState = {
         mode: 'daily',
         date: getTodayDate(),
     },
-    preferences: {
-        groupByProject: false,
-        showCompleted: true,
-        sortByType: false,
-    },
+    preferences: getInitialPreferences(),
 };
 
 // --- Reducer ---

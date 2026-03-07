@@ -36,7 +36,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         return () => unsubscribe();
     }, [user]);
 
-    // 3. Dispatch Wrapper
+    // 3. Persist preferences to localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            localStorage.setItem('preferences', JSON.stringify(state.preferences));
+        }
+    }, [state.preferences]);
+
+    // 4. Dispatch Wrapper
     // This intercepts actions, generates IDs if needed, updates local state, AND calls Firestore
     const dispatch = useCallback(async (action: Action) => {
         // --- UNDO ---
