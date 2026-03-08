@@ -68,11 +68,14 @@ export async function filterStateForExport(
         };
     }
 
+    // Convert excludedCollectionIds to a Set for O(1) lookups
+    const excludedCollectionIdsSet = new Set(excludedCollectionIds);
+
     // 1. Filter Collections
     // Create a new collections object excluding the selected IDs
     const filteredCollections: Record<string, Collection> = {};
     Object.entries(state.collections).forEach(([id, collection]) => {
-        if (!excludedCollectionIds.includes(id)) {
+        if (!excludedCollectionIdsSet.has(id)) {
             filteredCollections[id] = collection;
         }
     });
@@ -82,7 +85,7 @@ export async function filterStateForExport(
     Object.entries(state.bullets).forEach(([id, bullet]) => {
         // Check Project Exclusion
         // If the bullet belongs to a collection, and that collection is excluded, skip it.
-        if (bullet.collectionId && excludedCollectionIds.includes(bullet.collectionId)) {
+        if (bullet.collectionId && excludedCollectionIdsSet.has(bullet.collectionId)) {
             return;
         }
 
