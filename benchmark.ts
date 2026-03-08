@@ -5,9 +5,11 @@ import type { AppState, Bullet, Collection } from './src/types.ts';
 const mockDateLib = {
     parseISO: (s: string) => new Date(s),
     startOfDay: (d: Date) => d,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     subDays: (d: Date, amount: number) => d,
     startOfWeek: (d: Date) => d,
     endOfWeek: (d: Date) => d,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isWithinInterval: (date: Date) => true
 };
 
@@ -43,13 +45,13 @@ async function runBenchmark() {
     };
 
     const options = {
-        dateRange: 'all',
+        dateRange: 'all' as const,
         excludedCollectionIds
     };
 
     console.log('Warming up...');
     for (let i = 0; i < 3; i++) {
-        await filterStateForExport(state, options as any, mockDateLib as any);
+        await filterStateForExport(state, options, mockDateLib as unknown as import('./src/lib/exportUtils.ts').DateLib);
     }
 
     console.log('Running benchmark...');
@@ -58,7 +60,7 @@ async function runBenchmark() {
 
     for (let i = 0; i < iterations; i++) {
         const start = performance.now();
-        await filterStateForExport(state, options as any, mockDateLib as any);
+        await filterStateForExport(state, options, mockDateLib as unknown as import('./src/lib/exportUtils.ts').DateLib);
         const end = performance.now();
         totalTime += (end - start);
     }
