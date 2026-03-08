@@ -146,9 +146,9 @@ export function reducer(state: AppState, action: Action): AppState {
             return { ...state, collections: newCollections };
         }
         case 'DELETE_BULLET': {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { [action.payload.id]: deleted, ...remainingBullets } = state.bullets;
-            return { ...state, bullets: remainingBullets };
+            const newBullets = { ...state.bullets };
+            delete newBullets[action.payload.id];
+            return { ...state, bullets: newBullets };
         }
         case 'DELETE_BULLETS': {
             const newBullets = { ...state.bullets };
@@ -200,11 +200,11 @@ export function reducer(state: AppState, action: Action): AppState {
             };
         }
         case 'DELETE_COLLECTION': {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { [action.payload.id]: deleted, ...remainingCollections } = state.collections;
+            const newCollections = { ...state.collections };
+            delete newCollections[action.payload.id];
             return {
                 ...state,
-                collections: remainingCollections
+                collections: newCollections
             };
         }
         case 'TOGGLE_PREFERENCE': {
