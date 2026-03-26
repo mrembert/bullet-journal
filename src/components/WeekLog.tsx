@@ -151,12 +151,16 @@ export function WeekLog() {
                         bullets={weekBullets}
                         enableDragAndDrop={true}
                         isRearrangeMode={isRearrangeMode}
+                        showInlineEditors={groupByProject}
+                        defaultDate={defaultEditorDate}
                     />
                 </div>
 
-                <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)' }}>
-                    <BulletEditor defaultDate={defaultEditorDate} />
-                </div>
+                {!isRearrangeMode && (
+                    <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)' }}>
+                        <BulletEditor defaultDate={defaultEditorDate} />
+                    </div>
+                )}
             </div>
         </div>
     );

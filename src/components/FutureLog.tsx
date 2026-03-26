@@ -105,7 +105,11 @@ export function FutureLog() {
                             </div>
 
                             <div style={{ flex: 1, minHeight: '100px' }}>
-                                <TaskGroupList bullets={monthBullets} />
+                                <TaskGroupList
+                                    bullets={monthBullets}
+                                    showInlineEditors={state.preferences.groupByProject}
+                                    defaultDate={format(month, 'yyyy-MM-01')}
+                                />
 
 
                                 <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)' }}>

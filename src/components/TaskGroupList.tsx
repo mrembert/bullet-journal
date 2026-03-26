@@ -21,15 +21,25 @@ import {
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
 import { useEffect, useMemo, useCallback } from 'react';
 import { SortableProjectHeader } from './SortableProjectHeader';
+import { BulletEditor } from './BulletEditor';
 
 interface TaskGroupListProps {
     bullets: Bullet[];
     enableDragAndDrop?: boolean;
     onDragEnd?: (event: DragEndEvent) => void;
     isRearrangeMode?: boolean;
+    showInlineEditors?: boolean;
+    defaultDate?: string | null;
 }
 
-export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd, isRearrangeMode }: TaskGroupListProps) {
+export function TaskGroupList({
+    bullets,
+    enableDragAndDrop,
+    onDragEnd,
+    isRearrangeMode,
+    showInlineEditors = false,
+    defaultDate
+}: TaskGroupListProps) {
     const { state } = useStore();
     const { focusedId, setVisibleIds } = useKeyboardFocus();
     const { groupByProject, showCompleted } = state.preferences;
@@ -186,6 +196,14 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd, isRearran
                                         />
                                     ))}
                                 </SortableContext>
+                                {showInlineEditors && !isRearrangeMode && (
+                                    <BulletEditor
+                                        collectionId={null}
+                                        defaultDate={defaultDate}
+                                        isCompact
+                                        placeholder="Add to Inbox..."
+                                    />
+                                )}
                             </div>
                         ) : null}
 
@@ -202,6 +220,14 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd, isRearran
                                         />
                                     ))}
                                 </SortableContext>
+                                {showInlineEditors && !isRearrangeMode && (
+                                    <BulletEditor
+                                        collectionId={pid}
+                                        defaultDate={defaultDate}
+                                        isCompact
+                                        placeholder={`Add to ${state.collections[pid].title}...`}
+                                    />
+                                )}
                             </div>
                         ))}
 
@@ -238,7 +264,7 @@ export function TaskGroupList({ bullets, enableDragAndDrop, onDragEnd, isRearran
                 </div>
             </SortableContext>
         );
-    }, [groupByProject, unassigned, projectIds, grouped, focusedId, state.bullets, state.collections, visibleIdsSet, filteredBullets, isRearrangeMode]);
+    }, [groupByProject, unassigned, projectIds, grouped, focusedId, state.bullets, state.collections, visibleIdsSet, filteredBullets, isRearrangeMode, showInlineEditors, defaultDate]);
 
     if (enableDragAndDrop) {
         return (

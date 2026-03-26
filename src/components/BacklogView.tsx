@@ -5,6 +5,7 @@ import { TaskGroupList } from './TaskGroupList';
 import type { Bullet } from '../types';
 import { Archive, AlertCircle, Grid, Layers, ArrowUpDown } from 'lucide-react';
 import { format, parseISO, isBefore, startOfDay } from 'date-fns';
+import { BulletEditor } from './BulletEditor';
 
 export function BacklogView() {
     const { state, dispatch } = useStore();
@@ -102,13 +103,26 @@ export function BacklogView() {
                     </div>
                     <p style={{ fontSize: '1.2rem' }}>You're all caught up!</p>
                     <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>No open tasks found.</p>
+
+                    <div style={{ marginTop: '2rem', maxWidth: '400px', margin: '2rem auto 0' }}>
+                        <BulletEditor defaultDate={null} autoFocus={false} />
+                    </div>
                 </div>
             ) : groupByProject ? (
-                <TaskGroupList
-                    bullets={openTasks}
-                    enableDragAndDrop={true}
-                    isRearrangeMode={isRearrangeMode}
-                />
+                <>
+                    <TaskGroupList
+                        bullets={openTasks}
+                        enableDragAndDrop={true}
+                        isRearrangeMode={isRearrangeMode}
+                        showInlineEditors={groupByProject}
+                        defaultDate={null}
+                    />
+                    {!isRearrangeMode && (
+                        <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid hsl(var(--color-text-secondary) / 0.1)' }}>
+                            <BulletEditor defaultDate={null} />
+                        </div>
+                    )}
+                </>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                     {/* Undated Section */}
@@ -163,6 +177,12 @@ export function BacklogView() {
                             </div>
                         );
                     })}
+
+                    {!isRearrangeMode && (
+                        <div style={{ marginTop: '1rem' }}>
+                            <BulletEditor defaultDate={null} />
+                        </div>
+                    )}
                 </div>
             )}
 

@@ -1,18 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { useStore } from '../store';
 import type { BulletType } from '../types';
 import { generateUUID } from '../lib/utils';
 import { ProjectPicker } from './ProjectPicker';
 import { Folder, CornerDownLeft } from 'lucide-react';
 
-export function BulletEditor({ defaultDate, autoFocus = false }: { defaultDate?: string, autoFocus?: boolean }) {
+interface BulletEditorProps {
+    defaultDate?: string | null;
+    autoFocus?: boolean;
+    collectionId?: string | null;
+    placeholder?: string;
+    isCompact?: boolean;
+}
+
+export function BulletEditor({
+    defaultDate,
+    autoFocus = false,
+    collectionId: forcedCollectionId,
+    placeholder,
+    isCompact = false
+}: BulletEditorProps) {
     const [content, setContent] = useState('');
     const { state, dispatch } = useStore();
+    const inputId = useId();
 
     const [showProjectPicker, setShowProjectPicker] = useState(false);
     const [selectedCollectionId, setSelectedCollectionId] = useState<string>('');
 
-    const effectiveCollectionId = state.view.collectionId || selectedCollectionId;
+    // If collectionId is passed as a prop, it's forced (inline mode).
+    // Otherwise, it might be in state.view.collectionId (collection view).
+    // Otherwise, it's whatever the user selected in the picker.
+    const isForced = forcedCollectionId !== undefined;
+    const effectiveCollectionId = isForced ? forcedCollectionId : (state.view.collectionId || selectedCollectionId);
     const selectedProject = effectiveCollectionId ? state.collections[effectiveCollectionId] : null;
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -20,7 +39,10 @@ export function BulletEditor({ defaultDate, autoFocus = false }: { defaultDate?:
         if (content.trim()) {
             let type: BulletType = 'task';
             let cleanContent = content;
-            const targetDate = defaultDate || state.view.date;
+
+            // defaultDate might be null (backlog), undefined (not passed), or a string (daily/week)
+            // if it is undefined, we fallback to state.view.date
+            const targetDate = defaultDate !== undefined ? defaultDate : state.view.date;
 
             // Simple parsing
             if (content.startsWith('- ')) {
@@ -55,7 +77,7 @@ export function BulletEditor({ defaultDate, autoFocus = false }: { defaultDate?:
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.altKey && e.key.toLowerCase() === 'p') {
             e.preventDefault();
-            if (!state.view.collectionId) {
+            if (!state.view.collectionId && !isForced) {
                 setShowProjectPicker(prev => !prev);
             }
         }
@@ -65,23 +87,35 @@ export function BulletEditor({ defaultDate, autoFocus = false }: { defaultDate?:
         <form
             className="bullet-editor-row"
             onSubmit={handleSubmit}
-            style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', position: 'relative', alignItems: 'center' }}
+            style={{
+                marginTop: isCompact ? '0.5rem' : '1rem',
+                display: 'flex',
+                gap: '0.5rem',
+                position: 'relative',
+                alignItems: 'center',
+                padding: isCompact ? '0 0.5rem' : '0'
+            }}
         >
             <input
-                id="main-bullet-editor-input"
+                id={isCompact ? undefined : (isForced ? `inline-editor-${inputId}` : "main-bullet-editor-input")}
                 type="text"
                 className="input"
-                placeholder="Add a task (•), event (o), or note (-)..."
+                placeholder={placeholder || "Add a task (•), event (o), or note (-)..."}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 onKeyDown={handleKeyDown}
                 autoFocus={autoFocus}
                 enterKeyHint="enter"
-                style={{ flex: 1 }}
+                style={{
+                    flex: 1,
+                    fontSize: isCompact ? '0.9rem' : '1rem',
+                    padding: isCompact ? '0.5rem' : '0.75rem',
+                    paddingLeft: isCompact ? '1.5rem' : '2.5rem'
+                }}
             />
 
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'flex-end' }}>
-                {!state.view.collectionId && (
+                {!state.view.collectionId && !isForced && (
                     <div style={{ position: 'relative' }}>
                         <button
                             type="button"
@@ -135,7 +169,9 @@ export function BulletEditor({ defaultDate, autoFocus = false }: { defaultDate?:
                         justifyContent: 'center',
                         opacity: content.trim() ? 1 : 0.5,
                         cursor: content.trim() ? 'pointer' : 'default',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        minHeight: isCompact ? '32px' : '44px',
+                        minWidth: isCompact ? '32px' : '44px'
                     }}
                     title="Add Task"
                 >
