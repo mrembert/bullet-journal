@@ -182,9 +182,11 @@ export function DailyLog() {
                 bullets={dailyBullets}
                 enableDragAndDrop={true}
                 isRearrangeMode={isRearrangeMode}
+                showInlineEditors={groupByProject}
+                defaultDate={date}
             />
 
-            <BulletEditor />
+            {!isRearrangeMode && <BulletEditor />}
         </div>
     );
 }
