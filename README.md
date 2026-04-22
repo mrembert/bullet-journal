@@ -1,73 +1,89 @@
-# React + TypeScript + Vite
+# Last Task - Digital Bullet Journal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-7.x-646CFF.svg)](https://vitejs.dev/)
+[![Firebase](https://img.shields.io/badge/Firebase-12.x-FFCA28.svg)](https://firebase.google.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Currently, two official plugins are available:
+**Last Task** is a minimalist, privacy-focused digital bullet journal designed for deep work and organized productivity. Inspired by the original Bullet Journal method, it combines the flexibility of analog journaling with the power of digital organization.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![Current State](public/screenshot-placeholder.png) *(Add a screenshot here for your portfolio)*
 
-## React Compiler
+## ✨ Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+-   **🗂 Versatile Views:** Seamlessly switch between Daily Logs, Weekly Overviews, Future Logs (Monthly), and custom Collections.
+-   **📝 Rich Text Editing:** Powered by Tiptap, allowing for structured notes, links, and formatting within your journal entries.
+-   **🔄 Task Management:** Support for recurring tasks, priority levels, and state transitions (open, completed, migrated, cancelled).
+-   **🖱 Drag-and-Drop:** Intuitive reorganization of tasks and collections using `@dnd-kit`.
+-   **🔍 Global Search:** Instantly find any bullet or note across all logs and collections.
+-   **🌗 Premium Aesthetics:** A custom "Premium Paper" feel with HSL-based light and dark modes, smooth animations via Framer Motion, and high-quality typography.
+-   **💾 Data Portability:** Built-in export functionality to ensure you always own your data.
+-   **🔐 Security:** Robust authentication and "Invitation Only" access model enforced via Firestore Security Rules.
 
-## Expanding the ESLint configuration
+## 🚀 Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+-   **Frontend:** React 19 (Hooks, Context API, Reducers), TypeScript
+-   **Build Tool:** Vite
+-   **Backend:** Firebase (Authentication, Firestore)
+-   **Rich Text:** Tiptap Editor
+-   **Animations:** Framer Motion
+-   **Drag & Drop:** `@dnd-kit`
+-   **Icons:** Lucide React
+-   **Styling:** Custom Vanilla CSS with HSL variables for a consistent design system.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🏗 Architecture & Design
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Last Task is built with a focus on **predictable state management** and **performance**.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+-   **State Management:** Utilizes a centralized `useReducer` pattern combined with React Context to manage complex journal states without the overhead of external libraries.
+-   **Security Model:** Implements a strict "Invitation Only" system. Only users with emails pre-authorized in the `allowed_users` Firestore collection can access the application, providing an extra layer of privacy.
+-   **Design System:** Built on a custom HSL-based color palette that scales naturally between light and dark modes, ensuring a consistent user experience regardless of the environment.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🛠 Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+-   Node.js (v18 or higher)
+-   A Firebase Project (for Auth and Firestore)
+
+### Local Development
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/bullet-journal.git
+    cd bullet-journal
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Environment Setup:**
+    Create a `.env` file in the root directory and add your Firebase configuration:
+    ```env
+    VITE_FIREBASE_API_KEY=your_api_key
+    VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+    VITE_FIREBASE_PROJECT_ID=your_project_id
+    VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+    VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+    VITE_FIREBASE_APP_ID=your_app_id
+    ```
+
+4.  **Start the development server:**
+    ```bash
+    npm run dev
+    ```
+
+### Firebase Setup
+
+To use the security features, ensure your Firestore rules match the provided `firestore.rules` and you have an `allowed_users` collection where the document ID is the user's email.
+
+## 📜 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+*Built with ❤️ for better productivity.*
