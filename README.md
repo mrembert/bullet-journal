@@ -8,8 +8,6 @@
 
 **Last Task** is a minimalist, privacy-focused digital bullet journal designed for deep work and organized productivity. Inspired by the original Bullet Journal method, it combines the flexibility of analog journaling with the power of digital organization.
 
-![Current State](public/screenshot-placeholder.png) *(Add a screenshot here for your portfolio)*
-
 ## ✨ Key Features
 
 -   **🗂 Versatile Views:** Seamlessly switch between Daily Logs, Weekly Overviews, Future Logs (Monthly), and custom Collections.
