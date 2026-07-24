@@ -20,7 +20,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
 import { useEffect, useMemo, useCallback } from 'react';
-import { SortableProjectHeader } from './SortableProjectHeader';
+import { SortableProjectGroup } from './SortableProjectGroup';
 import { BulletEditor } from './BulletEditor';
 
 interface TaskGroupListProps {
@@ -95,9 +95,14 @@ export function TaskGroupList({
             }
         });
 
-        // Get sorted project IDs (maybe by creation date or alpha? Let's use creation date like sidebar)
+        // Get sorted project IDs using custom order (same sorting as sidebar/collections)
         const projectIds = Object.keys(grouped).sort((a, b) => {
-            return state.collections[b].createdAt - state.collections[a].createdAt;
+            const colA = state.collections[a];
+            const colB = state.collections[b];
+            if (colA.order !== undefined && colB.order !== undefined) {
+                return colA.order - colB.order;
+            }
+            return colB.createdAt - colA.createdAt;
         });
 
         return { grouped, unassigned, projectIds };
@@ -108,16 +113,31 @@ export function TaskGroupList({
     const handleInternalDragEnd = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
         if (!over) return;
+        console.log("drag_end_event:", { activeId: active.id, overId: over.id });
 
         if (active.id !== over.id) {
             // 1. Handle Project Reordering
             const allGroupIds = ['group-unassigned', ...projectIds];
             const isActiveProject = allGroupIds.includes(active.id as string);
-            const isOverProject = allGroupIds.includes(over.id as string);
 
-            if (isActiveProject && isOverProject) {
+            // If dropped over a bullet, find its project group
+            let overGroupId: string | null = null;
+            if (allGroupIds.includes(over.id as string)) {
+                overGroupId = over.id as string;
+            } else {
+                const bullet = state.bullets[over.id as string];
+                if (bullet) {
+                    const effectiveId = getEffectiveCollectionId(bullet, state.bullets);
+                    overGroupId = effectiveId || 'group-unassigned';
+                }
+            }
+
+            const isOverProject = overGroupId !== null && allGroupIds.includes(overGroupId);
+
+            if (isActiveProject && isOverProject && overGroupId !== null) {
                 const oldIndex = allGroupIds.indexOf(active.id as string);
-                const newIndex = allGroupIds.indexOf(over.id as string);
+                const newIndex = allGroupIds.indexOf(overGroupId);
+                console.log("swapping project index:", { oldIndex, newIndex });
                 const newOrder = arrayMove(allGroupIds, oldIndex, newIndex);
 
                 // Update collections order (filter out unassigned)
@@ -136,15 +156,15 @@ export function TaskGroupList({
 
             if (oldIndex !== -1) {
                 // If dropped over a project header, move to that project (at the start)
+                const targetCollectionId = overGroupId === 'group-unassigned' ? null : overGroupId;
                 if (isOverProject) {
-                    const targetCollectionId = over.id === 'group-unassigned' ? null : over.id as string;
                     dispatch({
                         type: 'UPDATE_BULLET',
                         payload: { id: active.id as string, collectionId: targetCollectionId }
                     });
 
                     // To reorder correctly, we should find the first bullet in that group
-                    const targetGroupBullets = over.id === 'group-unassigned' ? unassigned : grouped[over.id as string];
+                    const targetGroupBullets = overGroupId === 'group-unassigned' ? unassigned : (overGroupId ? grouped[overGroupId] : []);
                     if (targetGroupBullets && targetGroupBullets.length > 0) {
                         newIndex = filteredBullets.findIndex(b => b.id === targetGroupBullets[0].id);
                     } else {
@@ -155,12 +175,12 @@ export function TaskGroupList({
                 } else if (newIndex !== -1) {
                     // Dropped over another bullet. Update collectionId to match target bullet's project.
                     const targetBullet = filteredBullets[newIndex];
-                    const targetCollectionId = getEffectiveCollectionId(targetBullet, state.bullets);
+                    const targetCollId = getEffectiveCollectionId(targetBullet, state.bullets);
 
-                    if (filteredBullets[oldIndex].collectionId !== targetCollectionId) {
+                    if (filteredBullets[oldIndex].collectionId !== targetCollId) {
                         dispatch({
                             type: 'UPDATE_BULLET',
-                            payload: { id: active.id as string, collectionId: targetCollectionId }
+                            payload: { id: active.id as string, collectionId: targetCollId }
                         });
                     }
                 }
@@ -184,8 +204,7 @@ export function TaskGroupList({
                 <SortableContext items={allGroupIds} strategy={verticalListSortingStrategy}>
                     <div className={`task-group-list ${isRearrangeMode ? 'rearrange-active' : ''}`}>
                         {unassigned.length > 0 || projectIds.length === 0 ? (
-                            <div className="group-section" style={{ marginBottom: '2rem' }}>
-                                <SortableProjectHeader id="group-unassigned" title="Inbox / Unassigned" isUnassigned />
+                            <SortableProjectGroup id="group-unassigned" title="Inbox / Unassigned" isUnassigned>
                                 <SortableContext items={unassigned.map(b => b.id)} strategy={verticalListSortingStrategy}>
                                     {unassigned.map((b: Bullet) => (
                                         <SortableBulletItem
@@ -204,12 +223,11 @@ export function TaskGroupList({
                                         placeholder="Add to Inbox..."
                                     />
                                 )}
-                            </div>
+                            </SortableProjectGroup>
                         ) : null}
 
                         {projectIds.map(pid => (
-                            <div key={pid} className="group-section" style={{ marginBottom: '2rem' }}>
-                                <SortableProjectHeader id={pid} title={state.collections[pid].title} />
+                            <SortableProjectGroup key={pid} id={pid} title={state.collections[pid].title}>
                                 <SortableContext items={grouped[pid].map(b => b.id)} strategy={verticalListSortingStrategy}>
                                     {grouped[pid].map((b: Bullet) => (
                                         <SortableBulletItem
@@ -228,7 +246,7 @@ export function TaskGroupList({
                                         placeholder={`Add to ${state.collections[pid].title}...`}
                                     />
                                 )}
-                            </div>
+                            </SortableProjectGroup>
                         ))}
 
                         {filteredBullets.length === 0 && (
