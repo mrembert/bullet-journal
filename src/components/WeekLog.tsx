@@ -1,15 +1,20 @@
 import { useStore } from '../store';
 import { BulletEditor } from './BulletEditor';
 import { format, startOfWeek, addDays, isSameDay, parseISO, endOfWeek } from 'date-fns';
-import { ChevronLeft, ChevronRight, Grid, Layers, CheckSquare, ArrowUpDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Grid, Layers, CheckSquare, ArrowUpDown, MoveRight, Calendar, ArrowRight } from 'lucide-react';
 import { TaskGroupList } from './TaskGroupList';
 import { useKeyboardFocus } from '../contexts/KeyboardFocusContext';
 import { useEffect, useMemo, useState } from 'react';
+import { useToast } from '../contexts/ToastContext';
+import { DatePicker } from './DatePicker';
 
 export function WeekLog() {
     const { state, dispatch } = useStore();
     const { groupByProject, showCompleted, sortByType } = state.preferences;
     const [isRearrangeMode, setIsRearrangeMode] = useState(false);
+    const [showMoveMenu, setShowMoveMenu] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const { showToast } = useToast();
 
     // Use state.view.date as the anchor for the week
     const currentDate = parseISO(state.view.date);
@@ -60,6 +65,30 @@ export function WeekLog() {
 
         return (a.order || 0) - (b.order || 0);
     }), [state.bullets, datesInRange, sortByType, showCompleted]);
+
+    const openTasks = useMemo(() => weekBullets.filter(b => b.state === 'open' && b.type === 'task'), [weekBullets]);
+
+    const handleMoveToTomorrow = () => {
+        const tomorrow = format(addDays(currentDate, 1), 'yyyy-MM-dd');
+        handleMoveToDate(tomorrow);
+    };
+
+    const handleMoveToDate = (targetDate: string | null) => {
+        if (!targetDate) return;
+        const ids = openTasks.map(t => t.id);
+        if (ids.length > 0) {
+            dispatch({
+                type: 'UPDATE_BULLETS',
+                payload: {
+                    ids,
+                    updates: { date: targetDate }
+                }
+            });
+            showToast(`Moved ${ids.length} tasks to ${targetDate}`);
+        }
+        setShowMoveMenu(false);
+        setShowDatePicker(false);
+    };
 
     const defaultEditorDate = isSameDay(currentDate, new Date()) || datesInRange.includes(format(new Date(), 'yyyy-MM-dd'))
         ? format(new Date(), 'yyyy-MM-dd')
@@ -135,6 +164,66 @@ export function WeekLog() {
                     {sortByType ? <Layers size={16} /> : <Grid size={16} />}
                     {sortByType ? " By Type" : " Custom"}
                 </button>
+
+                <div style={{ position: 'relative' }}>
+                    <button
+                        onClick={() => setShowMoveMenu(!showMoveMenu)}
+                        className={`btn ${showMoveMenu ? 'btn-primary' : 'btn-ghost'}`}
+                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                        title="Move unfinished tasks"
+                        disabled={openTasks.length === 0}
+                    >
+                        <MoveRight size={16} />
+                        {" Move Open"}
+                    </button>
+                    {showMoveMenu && (
+                        <>
+                            <div
+                                className="picker-overlay"
+                                style={{ background: 'transparent', zIndex: 90 }}
+                                onClick={() => setShowMoveMenu(false)}
+                            />
+                            <div className="picker-panel" style={{
+                                position: 'absolute',
+                                top: '100%',
+                                right: 0,
+                                zIndex: 91,
+                                marginTop: '0.5rem',
+                                minWidth: '150px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.25rem'
+                            }}>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMoveToTomorrow();
+                                    }}
+                                    className="btn btn-ghost"
+                                    style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.9rem' }}
+                                >
+                                    <ArrowRight size={14} /> Next Day
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowDatePicker(true);
+                                    }}
+                                    className="btn btn-ghost"
+                                    style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.9rem' }}
+                                >
+                                    <Calendar size={14} /> Choose Date...
+                                </button>
+                            </div>
+                        </>
+                    )}
+                    {showDatePicker && (
+                        <DatePicker
+                            onSelectDate={handleMoveToDate}
+                            onCancel={() => setShowDatePicker(false)}
+                        />
+                    )}
+                </div>
             </div>
 
             <div style={{
