@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { calculateDepth, getEffectiveCollectionId } from './bulletUtils.ts';
+import { calculateDepth, getEffectiveCollectionId, getRecurringBulletIds } from './bulletUtils.ts';
 import type { Bullet } from '../types';
 
 const mockBullet = (id: string, parentNoteId?: string): Bullet => ({
@@ -179,5 +179,32 @@ describe('Project Inheritance Scenarios', () => {
         const state = { 'task1': task }; // deletedNote is missing
 
         assert.strictEqual(getEffectiveCollectionId(task, state), undefined);
+    });
+});
+
+describe('getRecurringBulletIds', () => {
+    it('returns only own ID if bullet is not recurring', () => {
+        const bullet = mockBulletWithProps('1', { recurringId: undefined });
+        const state = { '1': bullet };
+        const ids = getRecurringBulletIds(bullet, state);
+        assert.deepStrictEqual(ids, ['1']);
+    });
+
+    it('returns only own ID if bullet is recurring but recurringId is null', () => {
+        const bullet = mockBulletWithProps('1', { recurringId: null });
+        const state = { '1': bullet };
+        const ids = getRecurringBulletIds(bullet, state);
+        assert.deepStrictEqual(ids, ['1']);
+    });
+
+    it('returns all matching IDs if bullet is recurring', () => {
+        const b1 = mockBulletWithProps('1', { recurringId: 'rec-1' });
+        const b2 = mockBulletWithProps('2', { recurringId: 'rec-1' });
+        const b3 = mockBulletWithProps('3', { recurringId: 'rec-2' }); // different recurrence
+        const state = { '1': b1, '2': b2, '3': b3 };
+
+        const ids = getRecurringBulletIds(b1, state);
+        // Should find '1' and '2' which share 'rec-1', but not '3'
+        assert.deepStrictEqual(ids.sort(), ['1', '2']);
     });
 });
