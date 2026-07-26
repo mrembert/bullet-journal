@@ -5,6 +5,7 @@ import { X, Save, Trash } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import { cleanNoteContent } from '../lib/noteUtils.ts';
 import { v4 as uuidv4 } from 'uuid';
+import { getRecurringBulletIds } from '../lib/bulletUtils';
 
 interface NoteEditorProps {
     bulletId: string;
@@ -29,19 +30,35 @@ export function NoteEditor({ bulletId, onClose }: NoteEditorProps) {
 
     const handleClose = () => {
         // Always save the latest content from the ref
-        dispatch({
-            type: 'UPDATE_BULLET',
-            payload: { id: bulletId, longFormContent: contentRef.current }
-        });
+        if (bullet.recurringId) {
+            const ids = getRecurringBulletIds(bullet, state.bullets);
+            dispatch({
+                type: 'UPDATE_BULLETS',
+                payload: { ids, updates: { longFormContent: contentRef.current } }
+            });
+        } else {
+            dispatch({
+                type: 'UPDATE_BULLET',
+                payload: { id: bulletId, longFormContent: contentRef.current }
+            });
+        }
         onClose();
     };
 
     const handleDelete = () => {
         if (window.confirm('Are you sure you want to delete this note?')) {
-            dispatch({
-                type: 'UPDATE_BULLET',
-                payload: { id: bulletId, longFormContent: '' }
-            });
+            if (bullet.recurringId) {
+                const ids = getRecurringBulletIds(bullet, state.bullets);
+                dispatch({
+                    type: 'UPDATE_BULLETS',
+                    payload: { ids, updates: { longFormContent: '' } }
+                });
+            } else {
+                dispatch({
+                    type: 'UPDATE_BULLET',
+                    payload: { id: bulletId, longFormContent: '' }
+                });
+            }
             onClose();
         }
     };

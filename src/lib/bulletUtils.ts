@@ -62,3 +62,17 @@ export function getEffectiveCollectionId(
 
     return undefined;
 }
+
+/**
+ * Finds all bullet IDs that share the same recurringId as the given bullet.
+ * If the bullet does not have a recurringId, it returns an array containing only the given bullet's ID.
+ */
+export function getRecurringBulletIds(
+    bullet: Bullet,
+    allBullets: Record<string, Bullet>
+): string[] {
+    if (!bullet.recurringId) return [bullet.id];
+    return Object.values(allBullets)
+        .filter(b => b.recurringId === bullet.recurringId)
+        .map(b => b.id);
+}
